@@ -10,10 +10,19 @@ We follow a file-based task management system to keep track of our progress.
 
 ## Workflow
 
-1.  **Define a Task**: Create a new markdown file in `Tasks/in_progress/` with a descriptive name (e.g., `01-setup-basic-structure.md`).
+1.  **Define a Task**:
+    *   Create a new markdown file in `Tasks/in_progress/` with a descriptive name (e.g., `01-setup-basic-structure.md`).
+    *   Create a new feature branch (e.g., `git checkout -b feature/task-name`).
 2.  **Document**: Inside the task file, outline the objective, requirements, and checklist of items to complete.
-3.  **Execute**: As you work, check off items and add notes if the plan changes.
-4.  **Complete**: Once satisfied, move the file from `Tasks/in_progress/` to `Tasks/completed/`.
+3.  **Execute**:
+    *   As you work, check off items and add notes if the plan changes.
+    *   Commit changes to the feature branch regularly.
+4.  **Complete**: Once satisfied, move the file from `Tasks/in_progress/` to `Tasks/completed/` and commit the change.
+5.  **Merge**:
+    *   Wait for approval (if working with a reviewer).
+    *   Checkout `main` (`git checkout main`).
+    *   Merge the feature branch (`git merge feature/task-name`).
+    *   Delete the feature branch (`git branch -d feature/task-name`).
 
 ## Coding Standards
 
