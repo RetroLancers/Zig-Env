@@ -115,42 +115,42 @@ With the complex `readNextChar` function complete, these functions are straightf
 
 ## Checklist
 
-- [ ] Continue `src/reader.zig` (from Task 05b)
-- [ ] Implement `readValue` function
-  - [ ] Main parsing loop
-  - [ ] End-of-value cleanup logic
-  - [ ] Handle remaining backslashes
-  - [ ] Handle remaining quotes
-  - [ ] Handle heredoc garbage clearing
-  - [ ] Trim implicit double quote values
-- [ ] Implement `readPair` function
-  - [ ] Call readKey
-  - [ ] Trim key
-  - [ ] Copy key to own buffer
-  - [ ] Call readValue
-  - [ ] Copy value to own buffer
-  - [ ] Remove unclosed interpolations
-- [ ] Implement `readPairs` function
-  - [ ] Loop until EOF
-  - [ ] Create pairs
-  - [ ] Handle different ReadResult cases
-  - [ ] Memory management (free failed pairs)
-- [ ] Add tests for `readValue`:
-  - [ ] Simple values
-  - [ ] Quoted values
-  - [ ] Heredoc values
-  - [ ] Values with escapes
-  - [ ] Values with interpolation
-- [ ] Add tests for `readPair`:
-  - [ ] Simple pair
-  - [ ] Pair with whitespace
-  - [ ] Pair with quotes
-- [ ] Add tests for `readPairs`:
-  - [ ] Multiple pairs
-  - [ ] Comments between pairs
-  - [ ] Empty lines
-  - [ ] Windows line endings
-- [ ] Update `src/root.zig` to export if needed
+- [x] Continue `src/reader.zig` (from Task 05b)
+- [x] Implement `readValue` function
+  - [x] Main parsing loop
+  - [x] End-of-value cleanup logic
+  - [x] Handle remaining backslashes
+  - [x] Handle remaining quotes
+  - [x] Handle heredoc garbage clearing
+  - [x] Trim implicit double quote values
+- [x] Implement `readPair` function
+  - [x] Call readKey
+  - [x] Trim key
+  - [x] Copy key to own buffer
+  - [x] Call readValue
+  - [x] Copy value to own buffer
+  - [x] Remove unclosed interpolations
+- [x] Implement `readPairs` function
+  - [x] Loop until EOF
+  - [x] Create pairs
+  - [x] Handle different ReadResult cases
+  - [x] Memory management (free failed pairs)
+- [x] Add tests for `readValue`:
+  - [x] Simple values
+  - [x] Quoted values
+  - [x] Heredoc values
+  - [x] Values with escapes
+  - [x] Values with interpolation
+- [x] Add tests for `readPair`:
+  - [x] Simple pair
+  - [x] Pair with whitespace
+  - [x] Pair with quotes
+- [x] Add tests for `readPairs`:
+  - [x] Multiple pairs
+  - [x] Comments between pairs
+  - [x] Empty lines
+  - [x] Windows line endings
+- [x] Update `src/root.zig` to export if needed
 
 ## Dependencies
 - Task 03a (Escape Processing)

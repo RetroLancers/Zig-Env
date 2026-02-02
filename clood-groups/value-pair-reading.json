@@ -1,0 +1,15 @@
+[
+    "src/reader.zig",
+    "src/env_stream.zig",
+    "src/env_key.zig",
+    "src/env_value.zig",
+    "src/env_pair.zig",
+    "src/result_enums.zig",
+    "src/buffer_utils.zig",
+    "src/escape_processor.zig",
+    "src/quote_parser.zig",
+    "src/interpolation.zig",
+    "src/variable_position.zig",
+    "Tasks/05c_Value_Pair_Reading.md",
+    "cppnv/cppnv/node_dotenv.cc"
+]
