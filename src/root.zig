@@ -14,6 +14,7 @@ pub const whitespace_utils = @import("whitespace_utils.zig");
 pub const escape_processor = @import("escape_processor.zig");
 pub const quote_parser = @import("quote_parser.zig");
 pub const interpolation = @import("interpolation.zig");
+pub const reader = @import("reader.zig");
 
 test {
     _ = @import("env_stream.zig");
@@ -27,4 +28,5 @@ test {
     _ = @import("escape_processor.zig");
     _ = @import("quote_parser.zig");
     _ = @import("interpolation.zig");
+    _ = @import("reader.zig");
 }

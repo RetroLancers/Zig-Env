@@ -1,0 +1,158 @@
+const std = @import("std");
+const EnvStream = @import("env_stream.zig").EnvStream;
+const EnvKey = @import("env_key.zig").EnvKey;
+const ReadResult = @import("result_enums.zig").ReadResult;
+const testing = std.testing;
+
+pub fn clearGarbage(stream: *EnvStream) void {
+    while (true) {
+        const char_opt = stream.get();
+        if (char_opt == null) break;
+        if (!stream.good()) break;
+        if (char_opt.? == '\n') break;
+    }
+}
+
+pub fn readKey(stream: *EnvStream, key: *EnvKey) !ReadResult {
+    if (!stream.good()) return ReadResult.end_of_stream_key;
+
+    while (stream.good()) {
+        const char_opt = stream.get();
+        if (char_opt == null) break;
+        const key_char = char_opt.?;
+
+        if (key_char == '#') {
+            clearGarbage(stream);
+            return ReadResult.comment_encountered;
+        }
+
+        switch (key_char) {
+            ' ' => {
+                if (key.key_index == 0) continue; // left trim
+                try key.buffer.append(key_char);
+                key.key_index += 1;
+            },
+            '=' => {
+                key.key = key.buffer.items;
+                // If we are at EOF immediately after '=', we can't read value.
+                if (stream.eof()) return ReadResult.end_of_stream_value;
+                return ReadResult.success;
+            },
+            '\r' => continue,
+            '\n' => {
+                return ReadResult.fail;
+            },
+            else => {
+                try key.buffer.append(key_char);
+                key.key_index += 1;
+            },
+        }
+
+        key.key = key.buffer.items;
+    }
+
+    return ReadResult.end_of_stream_key;
+}
+
+test "clearGarbage clears to newline" {
+    var stream = EnvStream.init("garbage\nnext");
+
+    clearGarbage(&stream);
+
+    const next = stream.get();
+    try testing.expectEqual(@as(?u8, 'n'), next);
+}
+
+test "clearGarbage handles EOF" {
+    var stream = EnvStream.init("garbage");
+
+    clearGarbage(&stream);
+
+    try testing.expect(!stream.good());
+}
+
+test "readKey simple key" {
+    var stream = EnvStream.init("KEY=value");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit(testing.allocator);
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.success, result);
+    try testing.expectEqualStrings("KEY", key.key);
+}
+
+test "readKey leading spaces" {
+    var stream = EnvStream.init("  SPACED_KEY=value");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit(testing.allocator);
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.success, result);
+    try testing.expectEqualStrings("SPACED_KEY", key.key);
+}
+
+test "readKey internal spaces" {
+    var stream = EnvStream.init("my key=value");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit(testing.allocator);
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.success, result);
+    try testing.expectEqualStrings("my key", key.key);
+}
+
+test "readKey comment line" {
+    var stream = EnvStream.init("#comment\nnext");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit(testing.allocator);
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.comment_encountered, result);
+    try testing.expectEqualStrings("", key.key);
+
+    // clearGarbage consumes until newline, so next char should be 'n' from "next"
+    const next = stream.get();
+    try testing.expectEqual(@as(?u8, 'n'), next);
+}
+
+test "readKey invalid key" {
+    var stream = EnvStream.init("INVALID\n");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit(testing.allocator);
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.fail, result);
+}
+
+test "readKey windows line endings" {
+    var stream = EnvStream.init("KEY\r=value");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit(testing.allocator);
+
+    const result = try readKey(&stream, &key);
+    try testing.expectEqual(ReadResult.success, result);
+    try testing.expectEqualStrings("KEY", key.key);
+}
+
+test "readKey EOF during key" {
+    var stream = EnvStream.init("INCOMPLETE");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit(testing.allocator);
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.end_of_stream_key, result);
+    try testing.expectEqualStrings("INCOMPLETE", key.key);
+}
