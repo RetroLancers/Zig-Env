@@ -1,0 +1,10 @@
+{
+    "name": "escape-processing",
+    "description": "Logic for handling backslash escapes and control characters",
+    "files": [
+        "src/escape_processor.zig",
+        "Tasks/completed/03a_Backslash_Escape_Processing.md",
+        "src/buffer_utils.zig",
+        "src/env_value.zig"
+    ]
+}
