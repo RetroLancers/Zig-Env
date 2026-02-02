@@ -1,0 +1,9 @@
+[
+    "src/reader.zig",
+    "Tasks/05b_Character_Reading_State_Machine.md",
+    "src/env_value.zig",
+    "src/buffer_utils.zig",
+    "src/escape_processor.zig",
+    "src/quote_parser.zig",
+    "src/interpolation.zig"
+]

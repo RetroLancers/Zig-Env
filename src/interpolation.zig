@@ -14,7 +14,7 @@ pub fn positionOfDollarLastSign(value: *const EnvValue) ?usize {
     // So the current buffer content ends at value_index - 1.
 
     // Using isize for calculation to avoid underflow
-    var tmp: isize = @as(isize, @intCast(value.value_index)) - 2;
+    var tmp: isize = @as(isize, @intCast(value.value_index)) - 1;
 
     while (tmp >= 0) {
         const u_tmp = @as(usize, @intCast(tmp));
@@ -43,6 +43,7 @@ pub fn openVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
         value.is_parsing_variable = true;
 
         // Create VariablePosition (by value, as ArrayList stores struct)
+        // Create VariablePosition
         const new_pos = VariablePosition.init(value.value_index, value.value_index - 1, dollar_pos);
 
         try value.interpolations.append(new_pos);
@@ -166,7 +167,7 @@ test "open and close variable" {
     val.value = val.buffer.items;
     val.value_index = val.buffer.items.len;
 
-    // 3. "{" -> openVariable
+    // 3. "{" -> openVariable (called after adding)
     try val.buffer.append('{');
     val.value = val.buffer.items;
     val.value_index = val.buffer.items.len;
@@ -183,9 +184,7 @@ test "open and close variable" {
     val.value_index = val.buffer.items.len;
 
     // 5. "}" -> closeVariable
-    // closeVariable called when } is found.
-    // buffer currently: "Hello ${name"
-    // We append }
+    // closeVariable
     try val.buffer.append('}');
     val.value = val.buffer.items;
     val.value_index = val.buffer.items.len;
