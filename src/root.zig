@@ -12,6 +12,7 @@ pub const EnvPair = @import("env_pair.zig").EnvPair;
 pub const buffer_utils = @import("buffer_utils.zig");
 pub const whitespace_utils = @import("whitespace_utils.zig");
 pub const escape_processor = @import("escape_processor.zig");
+pub const quote_parser = @import("quote_parser.zig");
 
 test {
     _ = @import("env_stream.zig");
@@ -23,4 +24,5 @@ test {
     _ = @import("buffer_utils.zig");
     _ = @import("whitespace_utils.zig");
     _ = @import("escape_processor.zig");
+    _ = @import("quote_parser.zig");
 }

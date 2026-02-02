@@ -161,27 +161,27 @@ bool EnvReader::walk_single_quotes(EnvValue* value) {
 
 ## Checklist
 
-- [ ] Create `src/quote_parser.zig`
-- [ ] Implement `walkSingleQuotes` function
-- [ ] Implement `walkDoubleQuotes` function
-- [ ] Add tests for single quote handling:
-  - [ ] Empty single quotes `''`
-  - [ ] Normal single quotes `'value'`
-  - [ ] Triple single quotes `'''heredoc'''`
-  - [ ] Excess quotes `''''value''''`
-  - [ ] Single quotes preserve escapes literally
-- [ ] Add tests for double quote handling:
-  - [ ] Empty double quotes `""`
-  - [ ] Normal double quotes `"value"`
-  - [ ] Triple double quotes `"""heredoc"""`
-  - [ ] Excess quotes `""""value""""`
+- [x] Create `src/quote_parser.zig`
+- [x] Implement `walkSingleQuotes` function
+- [x] Implement `walkDoubleQuotes` function
+- [x] Add tests for single quote handling:
+  - [x] Empty single quotes `''`
+  - [x] Normal single quotes `'value'`
+  - [x] Triple single quotes `'''heredoc'''`
+  - [x] Excess quotes `''''value''''`
+  - [x] Single quotes preserve escapes literally
+- [x] Add tests for double quote handling:
+  - [x] Empty double quotes `""`
+  - [x] Normal double quotes `"value"`
+  - [x] Triple double quotes `"""heredoc"""`
+  - [x] Excess quotes `""""value""""`
 - [ ] Add tests for backtick quotes:
   - [ ] `` `value` ``
   - [ ] `` `value with ${var}` ``
-- [ ] Add tests for mixed scenarios:
-  - [ ] Single quotes inside double quotes
-  - [ ] Double quotes inside single quotes
-- [ ] Update `src/root.zig` to export new module
+- [x] Add tests for mixed scenarios:
+  - [x] Single quotes inside double quotes
+  - [x] Double quotes inside single quotes
+- [x] Update `src/root.zig` to export new module
 
 ## Dependencies
 - Task 01b (Key and Value Structures) - needs EnvValue

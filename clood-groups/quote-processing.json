@@ -1,0 +1,10 @@
+{
+    "name": "Quote Processing",
+    "description": "Files related to parsing and processing quotes in .env files",
+    "files": [
+        "src/quote_parser.zig",
+        "src/env_value.zig",
+        "src/buffer_utils.zig",
+        "Tasks/03b_Quote_State_Machine.md"
+    ]
+}
