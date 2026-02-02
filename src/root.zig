@@ -1,13 +1,19 @@
-//! By convention, root.zig is the root source file when making a library. If
-//! you are making an executable, the convention is to delete this file and
-//! start with main.zig instead.
 const std = @import("std");
 const testing = std.testing;
 
-pub export fn add(a: i32, b: i32) i32 {
-    return a + b;
-}
+pub const EnvStream = @import("env_stream.zig").EnvStream;
+pub const VariablePosition = @import("variable_position.zig").VariablePosition;
+pub const ReadResult = @import("result_enums.zig").ReadResult;
+pub const FinalizeResult = @import("result_enums.zig").FinalizeResult;
+pub const EnvKey = @import("env_key.zig").EnvKey;
+pub const EnvValue = @import("env_value.zig").EnvValue;
+pub const EnvPair = @import("env_pair.zig").EnvPair;
 
-test "basic add functionality" {
-    try testing.expect(add(3, 7) == 10);
+test {
+    _ = @import("env_stream.zig");
+    _ = @import("variable_position.zig");
+    _ = @import("result_enums.zig");
+    _ = @import("env_key.zig");
+    _ = @import("env_value.zig");
+    _ = @import("env_pair.zig");
 }
