@@ -1,0 +1,12 @@
+{
+    "name": "data-structures",
+    "description": "Foundational data models for the .env parser",
+    "files": [
+        "src/env_stream.zig",
+        "src/env_key.zig",
+        "src/env_value.zig",
+        "src/env_pair.zig",
+        "src/variable_position.zig",
+        "src/result_enums.zig"
+    ]
+}
