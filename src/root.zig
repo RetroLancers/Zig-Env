@@ -9,6 +9,9 @@ pub const EnvKey = @import("env_key.zig").EnvKey;
 pub const EnvValue = @import("env_value.zig").EnvValue;
 pub const EnvPair = @import("env_pair.zig").EnvPair;
 
+pub const buffer_utils = @import("buffer_utils.zig");
+pub const whitespace_utils = @import("whitespace_utils.zig");
+
 test {
     _ = @import("env_stream.zig");
     _ = @import("variable_position.zig");
@@ -16,4 +19,6 @@ test {
     _ = @import("env_key.zig");
     _ = @import("env_value.zig");
     _ = @import("env_pair.zig");
+    _ = @import("buffer_utils.zig");
+    _ = @import("whitespace_utils.zig");
 }

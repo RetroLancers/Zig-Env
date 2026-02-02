@@ -8,7 +8,7 @@ pub const EnvPair = struct {
 
     pub fn init(allocator: std.mem.Allocator) EnvPair {
         return EnvPair{
-            .key = EnvKey.init(),
+            .key = EnvKey.init(allocator),
             .value = EnvValue.init(allocator),
         };
     }

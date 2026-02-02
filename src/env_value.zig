@@ -27,7 +27,7 @@ pub const EnvValue = struct {
     is_already_interpolated: bool,
     
     // Buffer management
-    own_buffer: ?[]u8,
+    buffer: std.ArrayList(u8),
     value_index: usize,
 
     pub fn init(allocator: std.mem.Allocator) EnvValue {
@@ -52,45 +52,41 @@ pub const EnvValue = struct {
             .is_being_interpolated = false,
             .is_already_interpolated = false,
             
-            .own_buffer = null,
+            .buffer = std.ArrayList(u8).init(allocator),
             .value_index = 0,
         };
     }
 
     pub fn deinit(self: *EnvValue, allocator: std.mem.Allocator) void {
+        _ = allocator; // Allocator no longer needed for free if using ArrayList
         for (self.interpolations.items) |*item| {
             item.deinit();
         }
         self.interpolations.deinit();
-        if (self.own_buffer) |buffer| {
-            allocator.free(buffer);
-            self.own_buffer = null;
-        }
+        self.buffer.deinit();
     }
 
     pub fn hasOwnBuffer(self: *const EnvValue) bool {
-        return self.own_buffer != null;
+        return self.buffer.items.len > 0;
     }
 
     /// Takes ownership of the provided buffer.
     /// If there was already an owned buffer, it is freed.
     /// The `value` field is updated to point to the new buffer.
     pub fn setOwnBuffer(self: *EnvValue, allocator: std.mem.Allocator, buffer: []u8) void {
-        if (self.own_buffer) |old_buffer| {
-            allocator.free(old_buffer);
-        }
-        self.own_buffer = buffer;
-        self.value = buffer;
+        _ = allocator;
+        self.buffer.deinit();
+        self.buffer = std.ArrayList(u8).fromOwnedSlice(self.buffer.allocator, buffer);
+        self.value = self.buffer.items;
+        self.value_index = self.buffer.items.len;
     }
 
     /// Shrinks the owned buffer to the specified length.
     pub fn clipOwnBuffer(self: *EnvValue, allocator: std.mem.Allocator, length: usize) !void {
-        if (self.own_buffer) |buffer| {
-            if (length == buffer.len) return;
-            const new_buffer = try allocator.realloc(buffer, length);
-            self.own_buffer = new_buffer;
-            self.value = new_buffer;
-        }
+        _ = allocator;
+        try self.buffer.resize(length);
+        self.value = self.buffer.items;
+        self.value_index = self.buffer.items.len;
     }
 };
 

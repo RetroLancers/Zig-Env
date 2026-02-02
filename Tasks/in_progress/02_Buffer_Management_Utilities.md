@@ -110,22 +110,22 @@ Use **Option A** (ArrayList) for value building, then convert to owned slice whe
 
 ## Checklist
 
-- [ ] Create `src/buffer_utils.zig`
-- [ ] Implement `addToBuffer` function
-- [ ] Implement `isPreviousCharAnEscape` function
-- [ ] Create `src/whitespace_utils.zig`
-- [ ] Implement `getWhiteSpaceOffsetLeft` function
-- [ ] Implement `getWhiteSpaceOffsetRight` function
-- [ ] Add comprehensive tests for each function:
-  - [ ] `addToBuffer` with growing buffer
-  - [ ] `isPreviousCharAnEscape` with various positions
-  - [ ] Whitespace functions with edge cases
-- [ ] Test edge cases:
-  - [ ] Empty buffer
-  - [ ] Single character buffer
-  - [ ] Buffer at exactly capacity boundary
-  - [ ] Whitespace at various positions
-- [ ] Update `src/root.zig` to export new modules
+- [x] Create `src/buffer_utils.zig`
+- [x] Implement `addToBuffer` function
+- [x] Implement `isPreviousCharAnEscape` function
+- [x] Create `src/whitespace_utils.zig`
+- [x] Implement `getWhiteSpaceOffsetLeft` function
+- [x] Implement `getWhiteSpaceOffsetRight` function
+- [x] Add comprehensive tests for each function:
+  - [x] `addToBuffer` with growing buffer
+  - [x] `isPreviousCharAnEscape` with various positions
+  - [x] Whitespace functions with edge cases
+- [x] Test edge cases:
+  - [x] Empty buffer
+  - [x] Single character buffer
+  - [x] Buffer at exactly capacity boundary
+  - [x] Whitespace at various positions
+- [x] Update `src/root.zig` to export new modules
 
 ## Dependencies
 - Task 01b (Key and Value Structures) - needs EnvValue, VariablePosition
