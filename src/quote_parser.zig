@@ -10,7 +10,12 @@ pub fn walkSingleQuotes(value: *EnvValue) !bool {
     var stop = false;
 
     // At start of value?
-    if (value.value_index == 0) {
+    // We're at start if:
+    // 1. value_index is 0 (quotes not added yet) OR value_index == single_quote_streak (only quotes in buffer)
+    // 2. AND we're not already in a quote mode (otherwise we're ending, not starting)
+    const at_start = ((value.value_index == 0) or (value.value_index == value.single_quote_streak)) and (!value.quoted and !value.triple_quoted);
+
+    if (at_start) {
         if (value.single_quote_streak == 1) {
             value.quoted = true;
         } else if (value.single_quote_streak == 2) {
@@ -50,7 +55,12 @@ pub fn walkDoubleQuotes(value: *EnvValue) !bool {
     var stop = false;
 
     // At start of value?
-    if (value.value_index == 0) {
+    // We're at start if:
+    // 1. value_index is 0 (quotes not added yet) OR value_index == double_quote_streak (only quotes in buffer)
+    // 2. AND we're not already in a double quote mode (otherwise we're ending, not starting)
+    const at_start = ((value.value_index == 0) or (value.value_index == value.double_quote_streak)) and (!value.double_quoted and !value.triple_double_quoted);
+
+    if (at_start) {
         if (value.double_quote_streak == 1) {
             value.double_quoted = true;
         } else if (value.double_quote_streak == 2) {

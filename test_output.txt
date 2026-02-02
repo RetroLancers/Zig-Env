@@ -1,0 +1,82 @@
+1/55 root.test_0...OK
+2/55 env_stream.test.EnvStream basic reading...OK
+3/55 env_stream.test.EnvStream empty stream...OK
+4/55 env_stream.test.EnvStream state tracking...OK
+5/55 variable_position.test.VariablePosition initialization...OK
+6/55 variable_position.test.VariablePosition memory cleanup...OK
+7/55 result_enums.test.ReadResult enum values...OK
+8/55 env_key.test.EnvKey initialization...OK
+9/55 env_key.test.EnvKey buffer ownership...OK
+10/55 env_key.test.EnvKey clip buffer...OK
+11/55 env_value.test.EnvValue initialization...OK
+12/55 env_value.test.EnvValue buffer ownership...OK
+13/55 env_value.test.EnvValue interpolations...OK
+14/55 env_pair.test.EnvPair initialization and lifecycle...OK
+15/55 buffer_utils.test.addToBuffer...OK
+16/55 buffer_utils.test.isPreviousCharAnEscape...OK
+17/55 whitespace_utils.test.getWhiteSpaceOffsetLeft...OK
+18/55 whitespace_utils.test.getWhiteSpaceOffsetRight...OK
+19/55 escape_processor.test.walkBackSlashes - paired backslashes...OK
+20/55 escape_processor.test.walkBackSlashes - odd backslashes...OK
+21/55 escape_processor.test.walkBackSlashes - zero backslashes...OK
+22/55 escape_processor.test.processPossibleControlCharacter - known escapes...OK
+23/55 escape_processor.test.processPossibleControlCharacter - unknown escapes...OK
+24/55 escape_processor.test.full flow simulation...OK
+25/55 quote_parser.test.walkSingleQuotes - basic...OK
+26/55 quote_parser.test.walkSingleQuotes - empty...OK
+27/55 quote_parser.test.walkSingleQuotes - heredoc...OK
+28/55 quote_parser.test.walkSingleQuotes - excess quotes start...OK
+29/55 quote_parser.test.walkSingleQuotes - excess quotes end...OK
+30/55 quote_parser.test.walkDoubleQuotes - basic...OK
+31/55 quote_parser.test.walkDoubleQuotes - single quotes inside...OK
+32/55 quote_parser.test.walkSingleQuotes - double quotes inside...OK
+33/55 quote_parser.test.walkDoubleQuotes - empty...OK
+34/55 quote_parser.test.walkDoubleQuotes - heredoc...OK
+35/55 quote_parser.test.walkDoubleQuotes - excess...OK
+36/55 interpolation.test.positionOfDollarLastSign basic...OK
+37/55 interpolation.test.positionOfDollarLastSign with escape...OK
+38/55 interpolation.test.open and close variable...FAIL (TestUnexpectedResult)
+C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff65b85534f in expect (test.exe.obj)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+C:\DevCurrent\Zig-Env\src\interpolation.zig:177:5: 0x7ff65b860c4c in test.open and close variable (test.exe.obj)
+    try std.testing.expect(val.is_parsing_variable);
+    ^
+39/55 reader.test.clearGarbage clears to newline...OK
+40/55 reader.test.clearGarbage handles EOF...OK
+41/55 reader.test.readKey simple key...OK
+42/55 reader.test.readKey leading spaces...OK
+43/55 reader.test.readKey internal spaces...OK
+44/55 reader.test.readKey comment line...OK
+45/55 reader.test.readKey invalid key...OK
+46/55 reader.test.readKey windows line endings...OK
+47/55 reader.test.readKey EOF during key...OK
+48/55 reader.test.readNextChar basic...OK
+49/55 reader.test.readNextChar implicit double quote...OK
+50/55 reader.test.readNextChar backtick...OK
+51/55 reader.test.readNextChar comment...OK
+52/55 reader.test.readNextChar quotes...FAIL (TestUnexpectedResult)
+C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff65b85534f in expect (test.exe.obj)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+C:\DevCurrent\Zig-Env\src\reader.zig:346:5: 0x7ff65b863a9e in test.readNextChar quotes (test.exe.obj)
+    try testing.expect(val.quoted);
+    ^
+53/55 reader.test.readNextChar double quotes...FAIL (TestUnexpectedResult)
+C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff65b85534f in expect (test.exe.obj)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+C:\DevCurrent\Zig-Env\src\reader.zig:365:5: 0x7ff65b863dbe in test.readNextChar double quotes (test.exe.obj)
+    try testing.expect(val.double_quoted);
+    ^
+54/55 reader.test.readNextChar escape...OK
+55/55 reader.test.readNextChar interpolation...FAIL (TestUnexpectedResult)
+C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff65b85534f in expect (test.exe.obj)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+C:\DevCurrent\Zig-Env\src\reader.zig:406:5: 0x7ff65b864412 in test.readNextChar interpolation (test.exe.obj)
+    try testing.expect(val.is_parsing_variable);
+    ^
+51 passed; 0 skipped; 4 failed.
+error: the following test command failed with exit code 1:
+C:\DevCurrent\Zig-Env\.zig-cache\o\f55a9f57f6a088d809bf1e6699a31b1a\test.exe --seed=0xa260b68

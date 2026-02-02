@@ -133,6 +133,17 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8) !b
         '\'' => {
             if (!value.double_quoted and !value.triple_double_quoted) {
                 value.single_quote_streak += 1;
+
+                // Determine if we should process immediately
+                const should_process = (value.quoted or value.triple_quoted) or (value.value_index == value.single_quote_streak - 1);
+
+                if (should_process) {
+                    const stop = try quote_parser.walkSingleQuotes(value);
+                    if (stop) return false; // Closing quote - don't add to buffer
+                }
+
+                // If we reach here, it's an opening quote - add to buffer
+                try buffer_utils.addToBuffer(value, char);
             } else {
                 try buffer_utils.addToBuffer(value, char);
             }
@@ -141,6 +152,17 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8) !b
         '"' => {
             if (!value.quoted and !value.triple_quoted and !value.backtick_quoted and !value.implicit_double_quote) {
                 value.double_quote_streak += 1;
+
+                // Determine if we should process immediately
+                const should_process = (value.double_quoted or value.triple_double_quoted) or (value.value_index == value.double_quote_streak - 1);
+
+                if (should_process) {
+                    const stop = try quote_parser.walkDoubleQuotes(value);
+                    if (stop) return false; // Closing quote - don't add to buffer
+                }
+
+                // If we reach here, it's an opening quote - add to buffer
+                try buffer_utils.addToBuffer(value, char);
             } else {
                 try buffer_utils.addToBuffer(value, char);
             }

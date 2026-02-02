@@ -5,16 +5,18 @@ const whitespace_utils = @import("whitespace_utils.zig");
 
 /// Search backward from current position to find `$` that precedes `{`.
 /// Returns position of `$` or null if not found or if escaped.
+/// Called AFTER '{' is added to buffer, so we start from value_index - 2 to skip the '{'.
 pub fn positionOfDollarLastSign(value: *const EnvValue) ?usize {
-    if (value.value_index < 1) {
+    if (value.value_index < 2) {
         return null;
     }
 
     // value.value_index is where the NEXT char will go.
-    // So the current buffer content ends at value_index - 1.
+    // value_index - 1 is the '{' that was just added.
+    // So we start searching from value_index - 2.
 
     // Using isize for calculation to avoid underflow
-    var tmp: isize = @as(isize, @intCast(value.value_index)) - 1;
+    var tmp: isize = @as(isize, @intCast(value.value_index)) - 2;
 
     while (tmp >= 0) {
         const u_tmp = @as(usize, @intCast(tmp));
@@ -29,7 +31,7 @@ pub fn positionOfDollarLastSign(value: *const EnvValue) ?usize {
             tmp -= 1;
             continue; // skip whitespace between $ and {
         }
-        return null; // non-whitespace between $ and {
+        return null; // non-whitespace (other than '{') between $ and {
     }
     return null;
 }
