@@ -37,16 +37,17 @@ The original C++ implementation (`cppnv`) is a feature-complete .env parser used
 
 ### Zig Conversion Progress
 
-See [`cppnv_mindmap.md`](./cppnv_mindmap.md) for detailed conversion blueprint.
+See [`cppnv_mindmap.md`](./cppnv_mindmap.md) for the detailed conversion blueprint.
 
-**Phase 1: Core Data Structures** - 🔄 In Progress
-- [ ] EnvStream struct
-- [ ] EnvKey struct
-- [ ] EnvValue struct
-- [ ] VariablePosition struct
-- [ ] EnvPair struct
-
-**Phase 2-9**: Character utilities, quote parsing, interpolation, file I/O, testing - ⏳ Pending
+- ✅ **Phase 1: Core Data Structures** - `EnvStream`, `EnvKey`, `EnvValue`, `VariablePosition`, `EnvPair`
+- ✅ **Phase 2: Character/String Utilities** - Buffer management, escape utility functions
+- ✅ **Phase 3: Quote Parsing** - State machines for single, double, and backtick quotes
+- ✅ **Phase 4: Variable Interpolation** - `${variable}` detection and position tracking
+- ✅ **Phase 5: Core Reading** - `read_key`, `read_value`, `read_pair`, and character state machine
+- ✅ **Phase 6: Finalization** - Recursive interpolation resolution and circular dependency detection
+- ✅ **Phase 7: Memory Management** - Explicit deallocation, leak prevention, and `deinit` patterns
+- ⏳ **Phase 8: File I/O & Public API** - Integration with `std.fs` and high-level interface
+- 🔄 **Phase 9: Testing** - Porting 108 test cases (most core logic tests already ported)
 
 ## Usage (Planned)
 
