@@ -64,7 +64,7 @@ pub fn parseString(allocator: Allocator, content: []const u8) !Env {
 
     for (pairs.items) |*pair| {
         // Take ownership of buffers
-        const key = try pair.key.buffer.toOwnedSlice();
+        const key = pair.key.buffer.toOwnedSlice();
         errdefer allocator.free(key);
 
         const value = try pair.value.buffer.toOwnedSlice();

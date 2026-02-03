@@ -1,15 +1,16 @@
 const std = @import("std");
+const ReusableBuffer = @import("reusable_buffer.zig").ReusableBuffer;
 
 pub const EnvKey = struct {
     key: []const u8,
     // Buffer management
-    buffer: std.ArrayList(u8),
+    buffer: ReusableBuffer,
     key_index: usize,
 
     pub fn init(allocator: std.mem.Allocator) EnvKey {
         return EnvKey{
             .key = "",
-            .buffer = std.ArrayList(u8).init(allocator),
+            .buffer = ReusableBuffer.init(allocator),
             .key_index = 0,
         };
     }
@@ -28,7 +29,7 @@ pub const EnvKey = struct {
     pub fn setOwnBuffer(self: *EnvKey, buffer: []u8) void {
         const allocator = self.buffer.allocator;
         self.buffer.deinit();
-        self.buffer = std.ArrayList(u8).fromOwnedSlice(allocator, buffer);
+        self.buffer = ReusableBuffer.fromOwnedSlice(allocator, buffer);
         self.key = self.buffer.items;
         self.key_index = self.buffer.items.len;
     }

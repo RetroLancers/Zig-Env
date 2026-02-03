@@ -34,18 +34,18 @@ Check and update any code that accesses the buffer:
 - Replace `buffer.items.len` with `buffer.len()` or `buffer.items.len`
 
 ### 4. Testing
-- [ ] All existing `env_key.zig` tests pass
-- [ ] No new memory leaks
-- [ ] Benchmark if performance is equivalent (optional)
+- [x] All existing `env_key.zig` tests pass
+- [x] No new memory leaks
+- [x] Benchmark if performance is equivalent (optional)
 
 ## Files to Modify
 - `src/env_key.zig`
 
 ## Success Criteria
-- [ ] EnvKey uses ReusableBuffer instead of ArrayList
-- [ ] All tests pass
-- [ ] No memory leaks
-- [ ] Code is cleaner/more readable
+- [x] EnvKey uses ReusableBuffer instead of ArrayList
+- [x] All tests pass
+- [x] No memory leaks
+- [x] Code is cleaner/more readable
 
 ## Notes
 - EnvKey is simpler than EnvValue, so this is a good starting point
