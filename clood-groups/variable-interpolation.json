@@ -2,5 +2,6 @@
     "src/interpolation.zig",
     "src/variable_position.zig",
     "src/whitespace_utils.zig",
-    "Tasks/04_Variable_Interpolation_Functions.md"
+    "src/finalizer.zig",
+    "Tasks/in_progress/06_Interpolation_Finalization.md"
 ]
