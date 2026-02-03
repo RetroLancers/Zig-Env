@@ -4,20 +4,23 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // Library
-    const lib = b.addStaticLibrary(.{
-        .name = "zigenv",
+    // Create the core module
+    const zigenv_mod = b.addModule("zigenv", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
+    });
+
+    // Library
+    const lib = b.addLibrary(.{
+        .name = "zigenv",
+        .root_module = zigenv_mod,
     });
     b.installArtifact(lib);
 
     // Unit tests
     const unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = zigenv_mod,
     });
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const test_step = b.step("test", "Run unit tests");
@@ -35,18 +38,18 @@ pub fn build(b: *std.Build) void {
     };
 
     for (test_files) |test_file| {
-        const tests = b.addTest(.{
+        // Each test file needs its own module because they are separate root source files
+        const test_mod = b.createModule(.{
             .root_source_file = b.path(test_file),
             .target = target,
             .optimize = optimize,
         });
-        // Export the library as a module so external tests can import it
-        const lib_mod = b.createModule(.{
-            .root_source_file = b.path("src/root.zig"),
-            .target = target,
-            .optimize = optimize,
+        // Import the library module into the test module
+        test_mod.addImport("zigenv", zigenv_mod);
+
+        const tests = b.addTest(.{
+            .root_module = test_mod,
         });
-        tests.root_module.addImport("zigenv", lib_mod);
         const run_tests = b.addRunArtifact(tests);
         test_step.dependOn(&run_tests.step);
     }

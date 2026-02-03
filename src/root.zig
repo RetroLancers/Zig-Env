@@ -1,5 +1,6 @@
 const std = @import("std");
 
+pub const ReusableBuffer = @import("reusable_buffer.zig").ReusableBuffer;
 pub const EnvStream = @import("env_stream.zig").EnvStream;
 pub const EnvKey = @import("env_key.zig").EnvKey;
 pub const EnvValue = @import("env_value.zig").EnvValue;
@@ -17,6 +18,7 @@ pub const Env = @import("lib.zig").Env;
 
 // Tests
 test {
+    _ = @import("reusable_buffer.zig");
     _ = @import("env_stream.zig");
     _ = @import("env_key.zig");
     _ = @import("env_value.zig");
