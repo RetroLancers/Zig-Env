@@ -190,12 +190,12 @@ test "large file performance" {
     const allocator = std.testing.allocator;
 
     // Generate a large env file
-    var buffer = std.ArrayList(u8).init(allocator);
-    defer buffer.deinit();
+    var buffer = std.ArrayListUnmanaged(u8){};
+    defer buffer.deinit(allocator);
 
     var i: usize = 0;
     while (i < 1000) : (i += 1) {
-        try buffer.writer().print("KEY_{d}=VALUE_{d}\n", .{ i, i });
+        try buffer.writer(allocator).print("KEY_{d}=VALUE_{d}\n", .{ i, i });
     }
 
     var env = try parseString(allocator, buffer.items);

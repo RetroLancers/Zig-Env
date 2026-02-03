@@ -62,4 +62,29 @@ pub fn build(b: *std.Build) void {
     });
     const docs_step = b.step("docs", "Generate documentation");
     docs_step.dependOn(&install_docs.step);
+
+    // Benchmarks
+    const benchmark_mod = b.createModule(.{
+        .root_source_file = b.path("benchmarks/allocation_benchmark.zig"),
+        .target = target,
+        .optimize = .ReleaseFast, // Always optimize benchmarks for accurate results
+    });
+    benchmark_mod.addImport("zigenv", zigenv_mod);
+
+    const benchmark_exe = b.addExecutable(.{
+        .name = "allocation_benchmark",
+        .root_module = benchmark_mod,
+    });
+    b.installArtifact(benchmark_exe);
+
+    const benchmark_cmd = b.addRunArtifact(benchmark_exe);
+    const benchmark_step = b.step("benchmark", "Run allocation benchmarks");
+    benchmark_step.dependOn(&benchmark_cmd.step);
+
+    // Benchmark tests
+    const benchmark_test = b.addTest(.{
+        .root_module = benchmark_mod,
+    });
+    const run_benchmark_tests = b.addRunArtifact(benchmark_test);
+    test_step.dependOn(&run_benchmark_tests.step);
 }

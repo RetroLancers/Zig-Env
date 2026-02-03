@@ -1,0 +1,14 @@
+{
+    "name": "benchmarks",
+    "description": "Allocation benchmarks and performance testing",
+    "files": [
+        "benchmarks/allocation_benchmark.zig",
+        "docs/Performance.md",
+        "src/file_scanner.zig",
+        "src/reusable_buffer.zig",
+        "src/reader.zig",
+        "src/lib.zig",
+        "build.zig",
+        "Tasks/in_progress/17_benchmark_allocation_optimization.md"
+    ]
+}
