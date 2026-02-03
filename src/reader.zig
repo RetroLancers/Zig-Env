@@ -10,6 +10,7 @@ const interpolation = @import("interpolation.zig");
 const testing = std.testing;
 const memory = @import("memory.zig");
 const file_scanner = @import("file_scanner.zig");
+pub const ParserOptions = @import("parser_options.zig").ParserOptions;
 
 pub fn clearGarbage(stream: *EnvStream) void {
     while (true) {
@@ -20,7 +21,7 @@ pub fn clearGarbage(stream: *EnvStream) void {
     }
 }
 
-pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8) !bool {
+pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, options: ParserOptions) !bool {
     // Handle pending backslash streak (if not in single quote mode and current char is not backslash)
     if (!value.quoted and !value.triple_quoted and value.back_slash_streak > 0) {
         if (char != '\\') {
@@ -96,7 +97,13 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8) !b
             try buffer_utils.addToBuffer(value, char);
         },
         '\n' => {
-            if (!(value.triple_double_quoted or value.triple_quoted or (value.double_quoted and !value.implicit_double_quote))) {
+            // Check if newlines are allowed in the current quote context
+            const allow_newline = value.triple_double_quoted or
+                value.triple_quoted or
+                (value.double_quoted and !value.implicit_double_quote) or
+                (value.quoted and options.allow_single_quote_heredocs);
+
+            if (!allow_newline) {
                 if (value.value_index > 0) {
                     if (value.value[value.value_index - 1] == '\r') {
                         value.value_index -= 1;
@@ -199,7 +206,7 @@ pub fn readKey(stream: *EnvStream, key: *EnvKey) !ReadResult {
     return ReadResult.end_of_stream_key;
 }
 
-pub fn readValue(allocator: std.mem.Allocator, stream: *EnvStream, value: *EnvValue) !ReadResult {
+pub fn readValue(allocator: std.mem.Allocator, stream: *EnvStream, value: *EnvValue, options: ParserOptions) !ReadResult {
     if (!stream.good()) return ReadResult.end_of_stream_value;
 
     var key_char: u8 = 0;
@@ -208,7 +215,7 @@ pub fn readValue(allocator: std.mem.Allocator, stream: *EnvStream, value: *EnvVa
         if (char_opt == null) break;
         key_char = char_opt.?;
 
-        if (try readNextChar(allocator, value, key_char) and stream.good()) {
+        if (try readNextChar(allocator, value, key_char, options) and stream.good()) {
             continue;
         }
         break;
@@ -252,7 +259,7 @@ pub fn readValue(allocator: std.mem.Allocator, stream: *EnvStream, value: *EnvVa
     return ReadResult.success;
 }
 
-pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair) !ReadResult {
+pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair, options: ParserOptions) !ReadResult {
     const result = try readKey(stream, &pair.key);
     if (result == ReadResult.fail or result == ReadResult.empty) {
         return ReadResult.fail;
@@ -286,7 +293,7 @@ pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair
     }
 
     // Read value
-    const value_result = try readValue(allocator, stream, &pair.value);
+    const value_result = try readValue(allocator, stream, &pair.value, options);
     if (value_result == ReadResult.end_of_stream_value) {
         return ReadResult.end_of_stream_value;
     }
@@ -325,6 +332,7 @@ pub fn readPairsWithHints(
     allocator: std.mem.Allocator,
     stream: *EnvStream,
     hints: file_scanner.BufferSizeHints,
+    options: ParserOptions,
 ) !std.ArrayListUnmanaged(EnvPair) {
     var pairs = std.ArrayListUnmanaged(EnvPair){};
     errdefer memory.deletePairs(allocator, &pairs);
@@ -337,7 +345,7 @@ pub fn readPairsWithHints(
             hints.max_value_size,
         );
 
-        const result = try readPair(allocator, stream, &pair);
+        const result = try readPair(allocator, stream, &pair, options);
         if (result == ReadResult.end_of_stream_value) {
             try pairs.append(allocator, pair);
             break;
@@ -360,12 +368,16 @@ pub fn readPairsWithHints(
 }
 
 pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayListUnmanaged(EnvPair) {
+    return readPairsWithOptions(allocator, stream, ParserOptions.defaults());
+}
+
+pub fn readPairsWithOptions(allocator: std.mem.Allocator, stream: *EnvStream, options: ParserOptions) !std.ArrayListUnmanaged(EnvPair) {
     // Use default hints (0 capacity = start small)
     const default_hints = file_scanner.BufferSizeHints{
         .max_key_size = 0,
         .max_value_size = 0,
     };
-    return readPairsWithHints(allocator, stream, default_hints);
+    return readPairsWithHints(allocator, stream, default_hints, options);
 }
 
 test "clearGarbage clears to newline" {
@@ -472,130 +484,138 @@ test "readKey EOF during key" {
 }
 
 test "readNextChar basic" {
+    const default_options = ParserOptions.defaults();
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
     // 'a'
-    const cont = try readNextChar(testing.allocator, &val, 'a');
+    const cont = try readNextChar(testing.allocator, &val, 'a', default_options);
     try testing.expect(cont);
     try testing.expectEqualStrings("a", val.value);
 }
 
 test "readNextChar implicit double quote" {
+    const default_options = ParserOptions.defaults();
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
     // First char 'a' -> implicit double quote
-    _ = try readNextChar(testing.allocator, &val, 'a');
+    _ = try readNextChar(testing.allocator, &val, 'a', default_options);
     try testing.expect(val.implicit_double_quote);
     try testing.expect(val.double_quoted);
 }
 
 test "readNextChar backtick" {
+    const default_options = ParserOptions.defaults();
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
     // `
-    _ = try readNextChar(testing.allocator, &val, '`');
+    _ = try readNextChar(testing.allocator, &val, '`', default_options);
     try testing.expect(val.backtick_quoted);
     try testing.expect(val.double_quoted);
     // Opening backtick sets the mode but is not added to buffer
 }
 
 test "readNextChar comment" {
+    const default_options = ParserOptions.defaults();
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
     // #
-    const cont = try readNextChar(testing.allocator, &val, '#');
+    const cont = try readNextChar(testing.allocator, &val, '#', default_options);
     try testing.expect(!cont);
 }
 
 test "readNextChar quotes" {
+    const default_options = ParserOptions.defaults();
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
     // '
-    _ = try readNextChar(testing.allocator, &val, '\'');
+    _ = try readNextChar(testing.allocator, &val, '\'', default_options);
     // Not quoted yet, still in streak
     try testing.expect(!val.quoted);
 
     // val - this triggers the walk
-    _ = try readNextChar(testing.allocator, &val, 'v');
+    _ = try readNextChar(testing.allocator, &val, 'v', default_options);
     try testing.expect(val.quoted);
     try testing.expectEqualStrings("v", val.value);
 
     // ' -> closing quote starts streak
-    const cont = try readNextChar(testing.allocator, &val, '\'');
+    const cont = try readNextChar(testing.allocator, &val, '\'', default_options);
     try testing.expect(cont);
 
     // any other char -> triggers the walk that returns false
-    const cont2 = try readNextChar(testing.allocator, &val, ' ');
+    const cont2 = try readNextChar(testing.allocator, &val, ' ', default_options);
     try testing.expect(!cont2);
     try testing.expectEqualStrings("v", val.value);
 }
 
 test "readNextChar double quotes" {
+    const default_options = ParserOptions.defaults();
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
     // "
-    _ = try readNextChar(testing.allocator, &val, '"');
+    _ = try readNextChar(testing.allocator, &val, '"', default_options);
     try testing.expect(!val.double_quoted);
 
     // v - this triggers the walk
-    _ = try readNextChar(testing.allocator, &val, 'v');
+    _ = try readNextChar(testing.allocator, &val, 'v', default_options);
     try testing.expect(val.double_quoted);
     try testing.expectEqualStrings("v", val.value);
 
     // " -> closing quote starts streak
-    const cont = try readNextChar(testing.allocator, &val, '"');
+    const cont = try readNextChar(testing.allocator, &val, '"', default_options);
     try testing.expect(cont);
 
     // any other char -> triggers the walk that returns false
-    const cont2 = try readNextChar(testing.allocator, &val, ' ');
+    const cont2 = try readNextChar(testing.allocator, &val, ' ', default_options);
     try testing.expect(!cont2);
     try testing.expectEqualStrings("v", val.value);
 }
 
 test "readNextChar escape" {
+    const default_options = ParserOptions.defaults();
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
     // \
-    _ = try readNextChar(testing.allocator, &val, '\\');
+    _ = try readNextChar(testing.allocator, &val, '\\', default_options);
     try testing.expectEqual(@as(usize, 1), val.back_slash_streak);
     try testing.expectEqualStrings("", val.value); // Not added yet
 
     // n -> \n
-    const cont = try readNextChar(testing.allocator, &val, 'n');
+    const cont = try readNextChar(testing.allocator, &val, 'n', default_options);
     try testing.expect(cont);
     try testing.expectEqual(@as(usize, 0), val.back_slash_streak);
     try testing.expectEqualStrings("\n", val.value);
 }
 
 test "readNextChar interpolation" {
+    const default_options = ParserOptions.defaults();
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
     // IMPLICIT quotes because start with non-quote
     // a
-    _ = try readNextChar(testing.allocator, &val, 'a');
+    _ = try readNextChar(testing.allocator, &val, 'a', default_options);
     try testing.expect(val.implicit_double_quote);
 
     // $
-    _ = try readNextChar(testing.allocator, &val, '$');
+    _ = try readNextChar(testing.allocator, &val, '$', default_options);
 
     // {
-    _ = try readNextChar(testing.allocator, &val, '{');
+    _ = try readNextChar(testing.allocator, &val, '{', default_options);
     try testing.expect(val.is_parsing_variable);
     try testing.expectEqualStrings("a${", val.value);
 
     // b
-    _ = try readNextChar(testing.allocator, &val, 'b');
+    _ = try readNextChar(testing.allocator, &val, 'b', default_options);
 
     // }
-    _ = try readNextChar(testing.allocator, &val, '}');
+    _ = try readNextChar(testing.allocator, &val, '}', default_options);
     try testing.expect(!val.is_parsing_variable);
     try testing.expectEqualStrings("a${b}", val.value);
 
@@ -604,48 +624,52 @@ test "readNextChar interpolation" {
 
 // Tests for readValue
 test "readValue simple value" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("simple");
 
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
-    const result = try readValue(testing.allocator, &stream, &val);
+    const result = try readValue(testing.allocator, &stream, &val, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqual(@as(usize, 6), val.value_index);
 }
 
 test "readValue quoted value" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("\"quoted value\"");
 
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
-    const result = try readValue(testing.allocator, &stream, &val);
+    const result = try readValue(testing.allocator, &stream, &val, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expect(val.double_quoted);
 }
 
 test "readValue with escape" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("test\\nvalue");
 
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
-    const result = try readValue(testing.allocator, &stream, &val);
+    const result = try readValue(testing.allocator, &stream, &val, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expect(val.value_index > 0);
 }
 
 test "readValue implicit double quote trimming" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("value  ");
 
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
-    const result = try readValue(testing.allocator, &stream, &val);
+    const result = try readValue(testing.allocator, &stream, &val, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expect(val.implicit_double_quote);
@@ -654,12 +678,13 @@ test "readValue implicit double quote trimming" {
 }
 
 test "readValue with interpolation" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("a${b}c");
 
     var val = EnvValue.init(testing.allocator);
     defer val.deinit();
 
-    const result = try readValue(testing.allocator, &stream, &val);
+    const result = try readValue(testing.allocator, &stream, &val, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqual(@as(usize, 1), val.interpolations.items.len);
@@ -667,12 +692,13 @@ test "readValue with interpolation" {
 
 // Tests for readPair
 test "readPair simple pair" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("KEY=value");
 
     var pair = EnvPair.init(testing.allocator);
     defer pair.deinit();
 
-    const result = try readPair(testing.allocator, &stream, &pair);
+    const result = try readPair(testing.allocator, &stream, &pair, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("KEY", pair.key.key);
@@ -680,12 +706,13 @@ test "readPair simple pair" {
 }
 
 test "readPair with whitespace" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("  KEY  =  value  ");
 
     var pair = EnvPair.init(testing.allocator);
     defer pair.deinit();
 
-    const result = try readPair(testing.allocator, &stream, &pair);
+    const result = try readPair(testing.allocator, &stream, &pair, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("KEY", pair.key.key);
@@ -693,24 +720,26 @@ test "readPair with whitespace" {
 }
 
 test "readPair with quotes" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("KEY=\"quoted value\"");
 
     var pair = EnvPair.init(testing.allocator);
     defer pair.deinit();
 
-    const result = try readPair(testing.allocator, &stream, &pair);
+    const result = try readPair(testing.allocator, &stream, &pair, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("KEY", pair.key.key);
 }
 
 test "readPair comment line" {
+    const default_options = ParserOptions.defaults();
     var stream = EnvStream.init("#comment\nKEY=value");
 
     var pair = EnvPair.init(testing.allocator);
     defer pair.deinit();
 
-    const result = try readPair(testing.allocator, &stream, &pair);
+    const result = try readPair(testing.allocator, &stream, &pair, default_options);
 
     try testing.expectEqual(ReadResult.comment_encountered, result);
 }

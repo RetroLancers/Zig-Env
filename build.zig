@@ -35,6 +35,7 @@ pub fn build(b: *std.Build) void {
         "tests/heredoc_test.zig",
         "tests/edge_cases.zig",
         "tests/garbage_after_quote.zig",
+        "tests/single_quote_heredoc_test.zig",
     };
 
     for (test_files) |test_file| {

@@ -5,6 +5,9 @@
         "src/quote_parser.zig",
         "src/env_value.zig",
         "src/buffer_utils.zig",
-        "Tasks/03b_Quote_State_Machine.md"
+        "src/parser_options.zig",
+        "tests/quote_test.zig",
+        "tests/single_quote_heredoc_test.zig",
+        "Tasks/in_progress/18_single_quoted_heredocs.md"
     ]
 }

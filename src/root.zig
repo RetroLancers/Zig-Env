@@ -9,12 +9,16 @@ pub const VariablePosition = @import("variable_position.zig").VariablePosition;
 pub const ReadResult = @import("result_enums.zig").ReadResult;
 pub const FinalizeResult = @import("result_enums.zig").FinalizeResult;
 pub const file_scanner = @import("file_scanner.zig");
+pub const ParserOptions = @import("parser_options.zig").ParserOptions;
 
 // Public API
 pub const parse = @import("lib.zig").parse;
 pub const parseFile = @import("lib.zig").parseFile;
+pub const parseFileWithOptions = @import("lib.zig").parseFileWithOptions;
 pub const parseString = @import("lib.zig").parseString;
+pub const parseStringWithOptions = @import("lib.zig").parseStringWithOptions;
 pub const parseReader = @import("lib.zig").parseReader;
+pub const parseReaderWithOptions = @import("lib.zig").parseReaderWithOptions;
 pub const Env = @import("lib.zig").Env;
 
 // Tests
@@ -36,4 +40,5 @@ test {
     _ = @import("memory.zig");
     _ = @import("lib.zig");
     _ = @import("file_scanner.zig");
+    _ = @import("parser_options.zig");
 }

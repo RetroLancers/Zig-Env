@@ -7,6 +7,9 @@ const file_scanner = @import("file_scanner.zig");
 const EnvPair = @import("env_pair.zig").EnvPair;
 const Allocator = std.mem.Allocator;
 
+/// Parser configuration options for controlling parsing behavior.
+pub const ParserOptions = reader.ParserOptions;
+
 pub const Env = struct {
     map: std.StringHashMap([]const u8),
     allocator: Allocator,
@@ -43,23 +46,33 @@ pub const Env = struct {
 
 /// High-level API to parse a .env file from disk
 pub fn parseFile(allocator: Allocator, path: []const u8) !Env {
+    return parseFileWithOptions(allocator, path, ParserOptions.defaults());
+}
+
+/// Parse a .env file with custom options
+pub fn parseFileWithOptions(allocator: Allocator, path: []const u8, options: ParserOptions) !Env {
     const file = try std.fs.cwd().openFile(path, .{});
     defer file.close();
 
     const content = try file.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(content);
 
-    return parseString(allocator, content);
+    return parseStringWithOptions(allocator, content, options);
 }
 
 /// Parse .env content from a string
 pub fn parseString(allocator: Allocator, content: []const u8) !Env {
+    return parseStringWithOptions(allocator, content, ParserOptions.defaults());
+}
+
+/// Parse .env content from a string with custom options
+pub fn parseStringWithOptions(allocator: Allocator, content: []const u8, options: ParserOptions) !Env {
     // Pre-scan for buffer size hints to optimize allocations
     const hints = file_scanner.scanBufferSizes(content);
 
     var stream = EnvStream.init(content);
     // Use hints to initialize buffers with appropriate capacity
-    var pairs = try reader.readPairsWithHints(allocator, &stream, hints);
+    var pairs = try reader.readPairsWithHints(allocator, &stream, hints, options);
     errdefer memory.deletePairs(allocator, &pairs);
 
     try finalizer.finalizeAllValues(allocator, &pairs);
@@ -92,9 +105,14 @@ pub const parse = parseString;
 
 /// Parse from any std.io.Reader
 pub fn parseReader(allocator: Allocator, reader_obj: anytype) !Env {
+    return parseReaderWithOptions(allocator, reader_obj, ParserOptions.defaults());
+}
+
+/// Parse from any std.io.Reader with custom options
+pub fn parseReaderWithOptions(allocator: Allocator, reader_obj: anytype, options: ParserOptions) !Env {
     const content = try reader_obj.readAllAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(content);
-    return parseString(allocator, content);
+    return parseStringWithOptions(allocator, content, options);
 }
 
 test "parseString basic" {

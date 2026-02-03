@@ -1,5 +1,6 @@
 [
     "src/reader.zig",
+    "src/parser_options.zig",
     "src/reusable_buffer.zig",
     "src/env_stream.zig",
     "src/env_key.zig",

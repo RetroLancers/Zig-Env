@@ -1,5 +1,6 @@
 [
     "src/reader.zig",
+    "src/parser_options.zig",
     "Tasks/05b_Character_Reading_State_Machine.md",
     "src/env_value.zig",
     "src/buffer_utils.zig",

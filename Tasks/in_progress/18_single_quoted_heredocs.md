@@ -112,15 +112,24 @@ test "option disabled preserves old behavior" {
 ```
 
 ## Success Criteria
-- [ ] Parser options struct created
-- [ ] Quote parser allows newlines when option enabled
-- [ ] Reader correctly handles newlines in quoted strings
-- [ ] Public API accepts options
-- [ ] New tests pass
-- [ ] Existing tests still pass (backward compatibility)
+- [x] Parser options struct created (`src/parser_options.zig`)
+- [x] Quote parser allows newlines when option enabled (modified `src/reader.zig`)
+- [x] Reader correctly handles newlines in quoted strings
+- [x] Public API accepts options (`parseStringWithOptions`, `parseFileWithOptions`, `parseReaderWithOptions`)
+- [x] New tests pass (`tests/single_quote_heredoc_test.zig`)
+- [x] Existing tests still pass (backward compatibility)
 - [ ] Documentation updated with new option
+
+## Implementation Notes
+- Created `src/parser_options.zig` with `ParserOptions` struct
+- Modified `src/reader.zig` to accept and pass through `ParserOptions`
+- Added `parseStringWithOptions`, `parseFileWithOptions`, `parseReaderWithOptions` to `src/lib.zig`
+- Exported `ParserOptions` and new functions in `src/root.zig`
+- Created comprehensive tests in `tests/single_quote_heredoc_test.zig`
+- Updated clood groups: `quote-processing.json`, `character-reading.json`, `value-pair-reading.json`, `public-api.json`
 
 ## Notes
 - This should be **opt-in** to maintain backward compatibility
 - Consider interaction with escape sequences (e.g., `\"` inside heredoc)
 - Consider interaction with variable interpolation inside quoted heredocs
+

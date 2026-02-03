@@ -3,6 +3,7 @@
     "description": "Main entry points and public interfaces for the library",
     "files": [
         "src/lib.zig",
-        "src/root.zig"
+        "src/root.zig",
+        "src/parser_options.zig"
     ]
 }
