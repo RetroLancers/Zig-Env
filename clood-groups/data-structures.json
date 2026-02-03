@@ -12,6 +12,7 @@
         "Tasks/completed/10_create_reusable_buffer.md",
         "Tasks/completed/11_migrate_envkey_to_reusable_buffer.md",
         "Tasks/completed/12_migrate_envvalue_to_reusable_buffer.md",
-        "Tasks/completed/13_migrate_remaining_arraylist_usage.md"
+        "Tasks/completed/13_migrate_remaining_arraylist_usage.md",
+        "Tasks/in_progress/22_replace_arraylist_usage.md"
     ]
 }

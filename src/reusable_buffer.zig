@@ -163,6 +163,16 @@ pub const ReusableBuffer = struct {
         self.items = self.items.ptr[0..new_len];
         @memcpy(self.items[old_len..new_len], items);
     }
+    pub const Writer = std.io.GenericWriter(*ReusableBuffer, std.mem.Allocator.Error, appendWrite);
+
+    pub fn writer(self: *ReusableBuffer) Writer {
+        return .{ .context = self };
+    }
+
+    fn appendWrite(self: *ReusableBuffer, bytes: []const u8) !usize {
+        try self.appendSlice(bytes);
+        return bytes.len;
+    }
 };
 
 // ============================================================================

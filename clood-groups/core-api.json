@@ -1,0 +1,8 @@
+{
+    "name": "core-api",
+    "description": "Core Library API",
+    "files": [
+        "src/lib.zig",
+        "src/root.zig"
+    ]
+}

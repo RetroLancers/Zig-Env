@@ -4,6 +4,7 @@ const finalizer = @import("finalizer.zig");
 const EnvStream = @import("env_stream.zig").EnvStream;
 const memory = @import("memory.zig");
 const file_scanner = @import("file_scanner.zig");
+const ReusableBuffer = @import("reusable_buffer.zig").ReusableBuffer;
 const EnvPair = @import("env_pair.zig").EnvPair;
 const Allocator = std.mem.Allocator;
 
@@ -214,12 +215,12 @@ test "large file performance" {
     const allocator = std.testing.allocator;
 
     // Generate a large env file
-    var buffer = std.ArrayListUnmanaged(u8){};
-    defer buffer.deinit(allocator);
+    var buffer = ReusableBuffer.init(allocator);
+    defer buffer.deinit();
 
     var i: usize = 0;
     while (i < 1000) : (i += 1) {
-        try buffer.writer(allocator).print("KEY_{d}=VALUE_{d}\n", .{ i, i });
+        try buffer.writer().print("KEY_{d}=VALUE_{d}\n", .{ i, i });
     }
 
     var env = try parseString(allocator, buffer.items);

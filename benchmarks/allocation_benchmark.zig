@@ -1,6 +1,7 @@
 const std = @import("std");
 const zigenv = @import("zigenv");
 const Allocator = std.mem.Allocator;
+const ReusableBuffer = zigenv.ReusableBuffer;
 
 /// Tracking allocator that wraps another allocator to count allocations and reallocations
 /// Note: This uses a simpler approach that counts operations in a struct
@@ -152,21 +153,21 @@ const ComparisonResult = struct {
 
 /// Generate simple key=value content
 fn generateSimpleContent(alloc: Allocator, count: usize) ![]u8 {
-    var buffer = std.ArrayListUnmanaged(u8){};
-    errdefer buffer.deinit(alloc);
+    var buffer = ReusableBuffer.init(alloc);
+    errdefer buffer.deinit();
 
     var i: usize = 0;
     while (i < count) : (i += 1) {
-        try buffer.writer(alloc).print("KEY_{d}=value_{d}\n", .{ i, i });
+        try buffer.writer().print("KEY_{d}=value_{d}\n", .{ i, i });
     }
 
-    return buffer.toOwnedSlice(alloc);
+    return buffer.toOwnedSlice();
 }
 
 /// Generate large file content with mixed key/value sizes
 fn generateLargeContent(alloc: Allocator, count: usize) ![]u8 {
-    var buffer = std.ArrayListUnmanaged(u8){};
-    errdefer buffer.deinit(alloc);
+    var buffer = ReusableBuffer.init(alloc);
+    errdefer buffer.deinit();
 
     var i: usize = 0;
     while (i < count) : (i += 1) {
@@ -174,7 +175,7 @@ fn generateLargeContent(alloc: Allocator, count: usize) ![]u8 {
         const key_suffix = if (i % 10 == 0) "_EXTRA_LONG_KEY_NAME" else "";
         const value_suffix = if (i % 5 == 0) "_with_some_extra_content_for_variety" else "";
 
-        try buffer.writer(alloc).print("KEY_{d}{s}=value_{d}{s}\n", .{
+        try buffer.writer().print("KEY_{d}{s}=value_{d}{s}\n", .{
             i,
             key_suffix,
             i,
@@ -182,36 +183,36 @@ fn generateLargeContent(alloc: Allocator, count: usize) ![]u8 {
         });
     }
 
-    return buffer.toOwnedSlice(alloc);
+    return buffer.toOwnedSlice();
 }
 
 /// Generate heredoc-heavy content
 fn generateHeredocContent(alloc: Allocator, count: usize) ![]u8 {
-    var buffer = std.ArrayListUnmanaged(u8){};
-    errdefer buffer.deinit(alloc);
+    var buffer = ReusableBuffer.init(alloc);
+    errdefer buffer.deinit();
 
     var i: usize = 0;
     while (i < count) : (i += 1) {
         const quote_type: u8 = if (i % 2 == 0) '"' else '\'';
         const quote_str: []const u8 = if (i % 2 == 0) "\"\"\"" else "'''";
 
-        try buffer.writer(alloc).print("HEREDOC_{d}={s}\n", .{ i, quote_str });
-        try buffer.writer(alloc).print("This is line 1 of heredoc {d}\n", .{i});
-        try buffer.writer(alloc).print("This is line 2 of heredoc {d}\n", .{i});
-        try buffer.writer(alloc).print("This is line 3 of heredoc {d}\n", .{i});
-        try buffer.writer(alloc).print("{c}{c}{c}\n", .{ quote_type, quote_type, quote_type });
+        try buffer.writer().print("HEREDOC_{d}={s}\n", .{ i, quote_str });
+        try buffer.writer().print("This is line 1 of heredoc {d}\n", .{i});
+        try buffer.writer().print("This is line 2 of heredoc {d}\n", .{i});
+        try buffer.writer().print("This is line 3 of heredoc {d}\n", .{i});
+        try buffer.writer().print("{c}{c}{c}\n", .{ quote_type, quote_type, quote_type });
     }
 
-    return buffer.toOwnedSlice(alloc);
+    return buffer.toOwnedSlice();
 }
 
 /// Generate real-world sample content
 fn generateRealWorldContent(alloc: Allocator) ![]u8 {
-    var buffer = std.ArrayListUnmanaged(u8){};
-    errdefer buffer.deinit(alloc);
+    var buffer = ReusableBuffer.init(alloc);
+    errdefer buffer.deinit();
 
     // Simulate a realistic .env file
-    try buffer.appendSlice(alloc,
+    try buffer.appendSlice(
         \\# Database Configuration
         \\DB_HOST=localhost
         \\DB_PORT=5432
@@ -269,7 +270,7 @@ fn generateRealWorldContent(alloc: Allocator) ![]u8 {
         \\
     );
 
-    return buffer.toOwnedSlice(alloc);
+    return buffer.toOwnedSlice();
 }
 
 // ============================================================================
