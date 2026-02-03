@@ -14,7 +14,7 @@ pub const EnvStream = struct {
             .data = data,
             .index = 0,
             .length = data.len,
-            .is_good = true,
+            .is_good = data.len > 0,
         };
     }
 
@@ -24,7 +24,7 @@ pub const EnvStream = struct {
 
     // Read next char and advance (return null on EOF)
     pub fn get(self: *EnvStream) ?u8 {
-        if (!self.is_good or self.index >= self.length) {
+        if (self.index >= self.length) {
             self.is_good = false;
             return null;
         }
@@ -37,12 +37,16 @@ pub const EnvStream = struct {
             if (char == '\r') {
                 // Peek at next char
                 if (self.index < self.length and self.data[self.index] == '\n') {
-                    // Skip the \r, return the \n
-                    return self.get();
+                    // Skip the \r, consume the \n
+                    const next_char = self.data[self.index];
+                    self.index += 1;
+                    self.is_good = self.index < self.length;
+                    return next_char;
                 }
             }
         }
 
+        self.is_good = self.index < self.length;
         return char;
     }
 
@@ -79,10 +83,10 @@ test "EnvStream empty stream" {
     var stream = EnvStream.init(data);
 
     try testing.expect(stream.eof());
-    try testing.expect(stream.good()); // Good initially, just empty
+    try testing.expect(!stream.good()); // Now false initially if empty
 
     try testing.expectEqual(@as(?u8, null), stream.get());
-    try testing.expect(!stream.good()); // Not good after trying to read past EOF
+    try testing.expect(!stream.good());
 }
 
 test "EnvStream state tracking" {
@@ -91,11 +95,11 @@ test "EnvStream state tracking" {
 
     try testing.expect(stream.good());
     _ = stream.get();
-    try testing.expect(stream.good()); // Still good after reading last char
-    try testing.expect(stream.eof()); // But at EOF
+    try testing.expect(!stream.good()); // Now false after reading last char
+    try testing.expect(stream.eof());
 
-    _ = stream.get(); // Read past EOF
-    try testing.expect(!stream.good()); // Now bad
+    _ = stream.get();
+    try testing.expect(!stream.good());
 }
 
 test "EnvStream CRLF handling" {
@@ -152,4 +156,20 @@ test "EnvStream mixed line endings" {
     } else {
         try testing.expectEqualStrings("LF\nCRLF\r\nLF\n", result[0..i]);
     }
+}
+
+test "EnvStream CR at very end" {
+    const content = "KEY=\r";
+    var stream = EnvStream.init(content);
+
+    var result: [10]u8 = undefined;
+    var i: usize = 0;
+    while (stream.get()) |c| {
+        result[i] = c;
+        i += 1;
+    }
+
+    // On both Windows and Unix, a standalone \r at the very end should be preserved
+    // because it's not followed by \n
+    try testing.expectEqualStrings("KEY=\r", result[0..i]);
 }
