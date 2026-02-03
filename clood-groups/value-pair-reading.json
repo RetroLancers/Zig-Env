@@ -12,5 +12,7 @@
     "src/interpolation.zig",
     "src/variable_position.zig",
     "Tasks/05c_Value_Pair_Reading.md",
+    "Tasks/completed/12_migrate_envvalue_to_reusable_buffer.md",
+    "Tasks/completed/13_migrate_remaining_arraylist_usage.md",
     "cppnv/cppnv/node_dotenv.cc"
 ]

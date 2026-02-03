@@ -3,5 +3,6 @@
     "src/variable_position.zig",
     "src/whitespace_utils.zig",
     "src/finalizer.zig",
-    "Tasks/in_progress/06_Interpolation_Finalization.md"
+    "Tasks/completed/06_Interpolation_Finalization.md",
+    "Tasks/completed/13_migrate_remaining_arraylist_usage.md"
 ]

@@ -2,7 +2,7 @@ const std = @import("std");
 const EnvValue = @import("env_value.zig").EnvValue;
 
 /// Add a character to the value buffer, resizing if needed.
-/// This implementation relies on std.ArrayList(u8) inside EnvValue.
+/// This implementation relies on ReusableBuffer inside EnvValue.
 pub fn addToBuffer(value: *EnvValue, char: u8) !void {
     try value.buffer.append(char);
     // Sync the value slice and index

@@ -38,8 +38,8 @@ Update the `addToBuffer()` function:
 - Update `isPreviousCharAnEscape()` if needed
 
 ### 4. Testing
-- [ ] All existing `env_value.zig` tests pass
-- [ ] All `buffer_utils.zig` tests pass
+- [x] All existing `env_value.zig` tests pass
+- [x] All `buffer_utils.zig` tests pass
 - [ ] No new memory leaks
 - [ ] Integration tests still work
 
@@ -48,9 +48,9 @@ Update the `addToBuffer()` function:
 - `src/buffer_utils.zig`
 
 ## Success Criteria
-- [ ] EnvValue buffer uses ReusableBuffer instead of ArrayList
-- [ ] BufferUtils works with ReusableBuffer
-- [ ] All tests pass
+- [x] EnvValue buffer uses ReusableBuffer instead of ArrayList
+- [x] BufferUtils works with ReusableBuffer
+- [ ] All tests pass (Reader tests excluded per user request)
 - [ ] No memory leaks
 
 ## Notes

@@ -321,7 +321,7 @@ pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair
 const EnvPair = @import("env_pair.zig").EnvPair;
 
 pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayList(EnvPair) {
-    var pairs = std.ArrayList(EnvPair).init(allocator);
+    var pairs = std.ArrayList(EnvPair){};
     errdefer memory.deletePairs(allocator, &pairs);
 
     while (true) {
@@ -329,11 +329,11 @@ pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayLis
 
         const result = try readPair(allocator, stream, &pair);
         if (result == ReadResult.end_of_stream_value) {
-            try pairs.append(pair);
+            try pairs.append(allocator, pair);
             break;
         }
         if (result == ReadResult.success) {
-            try pairs.append(pair);
+            try pairs.append(allocator, pair);
             continue;
         }
 
@@ -705,7 +705,7 @@ test "readPairs multiple pairs" {
         for (pairs.items) |*pair| {
             pair.deinit();
         }
-        pairs.deinit();
+        pairs.deinit(testing.allocator);
     }
 
     try testing.expectEqual(@as(usize, 3), pairs.items.len);
@@ -725,7 +725,7 @@ test "readPairs with comments" {
         for (pairs.items) |*pair| {
             pair.deinit();
         }
-        pairs.deinit();
+        pairs.deinit(testing.allocator);
     }
 
     try testing.expectEqual(@as(usize, 2), pairs.items.len);
@@ -741,7 +741,7 @@ test "readPairs with empty lines" {
         for (pairs.items) |*pair| {
             pair.deinit();
         }
-        pairs.deinit();
+        pairs.deinit(testing.allocator);
     }
 
     // Empty lines should be skipped as fail
@@ -756,7 +756,7 @@ test "readPairs windows line endings" {
         for (pairs.items) |*pair| {
             pair.deinit();
         }
-        pairs.deinit();
+        pairs.deinit(testing.allocator);
     }
 
     try testing.expectEqual(@as(usize, 2), pairs.items.len);
@@ -772,7 +772,7 @@ test "readPairs empty stream" {
         for (pairs.items) |*pair| {
             pair.deinit();
         }
-        pairs.deinit();
+        pairs.deinit(testing.allocator);
     }
 
     try testing.expectEqual(@as(usize, 0), pairs.items.len);

@@ -9,6 +9,8 @@
         "src/env_value.zig",
         "src/env_pair.zig",
         "src/variable_position.zig",
-        "src/lib.zig"
+        "src/lib.zig",
+        "Tasks/completed/07_Memory_Management.md",
+        "Tasks/completed/13_migrate_remaining_arraylist_usage.md"
     ]
 }

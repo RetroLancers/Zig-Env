@@ -67,7 +67,7 @@ pub fn parseString(allocator: Allocator, content: []const u8) !Env {
         const key = pair.key.buffer.toOwnedSlice();
         errdefer allocator.free(key);
 
-        const value = try pair.value.buffer.toOwnedSlice();
+        const value = pair.value.buffer.toOwnedSlice();
         errdefer allocator.free(value);
 
         try env.put(key, value);
@@ -77,7 +77,7 @@ pub fn parseString(allocator: Allocator, content: []const u8) !Env {
     for (pairs.items) |*pair| {
         pair.deinit();
     }
-    pairs.deinit();
+    pairs.deinit(allocator);
 
     return env;
 }

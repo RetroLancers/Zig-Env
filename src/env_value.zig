@@ -1,5 +1,6 @@
 const std = @import("std");
 const VariablePosition = @import("variable_position.zig").VariablePosition;
+const ReusableBuffer = @import("reusable_buffer.zig").ReusableBuffer;
 
 pub const EnvValue = struct {
     value: []const u8,
@@ -27,14 +28,14 @@ pub const EnvValue = struct {
     is_already_interpolated: bool,
 
     // Buffer management
-    buffer: std.ArrayList(u8),
+    buffer: ReusableBuffer,
     value_index: usize,
     escaped_dollar_index: ?usize,
 
     pub fn init(allocator: std.mem.Allocator) EnvValue {
         return EnvValue{
             .value = "",
-            .interpolations = std.ArrayList(VariablePosition).init(allocator),
+            .interpolations = .{},
 
             .is_parsing_variable = false,
             .interpolation_index = 0,
@@ -53,7 +54,7 @@ pub const EnvValue = struct {
             .is_being_interpolated = false,
             .is_already_interpolated = false,
 
-            .buffer = std.ArrayList(u8).init(allocator),
+            .buffer = ReusableBuffer.init(allocator),
             .value_index = 0,
             .escaped_dollar_index = null,
         };
@@ -63,7 +64,7 @@ pub const EnvValue = struct {
         for (self.interpolations.items) |*item| {
             item.deinit();
         }
-        self.interpolations.deinit();
+        self.interpolations.deinit(self.buffer.allocator);
         self.buffer.deinit();
     }
 
@@ -77,7 +78,7 @@ pub const EnvValue = struct {
     pub fn setOwnBuffer(self: *EnvValue, buffer: []u8) void {
         const allocator = self.buffer.allocator;
         self.buffer.deinit();
-        self.buffer = std.ArrayList(u8).fromOwnedSlice(allocator, buffer);
+        self.buffer = ReusableBuffer.fromOwnedSlice(allocator, buffer);
         self.value = self.buffer.items;
         self.value_index = self.buffer.items.len;
     }
@@ -123,7 +124,7 @@ test "EnvValue interpolations" {
     // We might need to mock or just use the struct if it's simple.
     // Let's assume VariablePosition is defined in variable_position.zig
 
-    try val.interpolations.append(VariablePosition.init(0, 0, 0));
+    try val.interpolations.append(allocator, VariablePosition.init(0, 0, 0));
 
     try std.testing.expect(val.interpolations.items.len == 1);
 }

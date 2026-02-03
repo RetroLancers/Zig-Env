@@ -52,7 +52,7 @@ pub fn openVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
         // Create VariablePosition
         const new_pos = VariablePosition.init(value.value_index, value.value_index - 1, dollar_pos);
 
-        try value.interpolations.append(new_pos);
+        try value.interpolations.append(value.buffer.allocator, new_pos);
     }
 }
 

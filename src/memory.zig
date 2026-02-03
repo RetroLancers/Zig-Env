@@ -14,16 +14,15 @@ pub fn deletePair(allocator: Allocator, pair: *EnvPair) void {
 
 /// Clean up all pairs in the list
 pub fn deletePairs(allocator: Allocator, pairs: *ArrayList(EnvPair)) void {
-    _ = allocator;
     for (pairs.items) |*pair| {
         pair.deinit();
     }
-    pairs.deinit();
+    pairs.deinit(allocator);
 }
 
 test "deletePairs cleans up everything" {
     const allocator = std.testing.allocator;
-    var pairs = ArrayList(EnvPair).init(allocator);
+    var pairs = ArrayList(EnvPair){};
     // errdefer deletePairs(allocator, &pairs); // In case of failure in this test
 
     // Create some pairs with owned buffers
@@ -41,7 +40,7 @@ test "deletePairs cleans up everything" {
         vbuf[6] = @intCast('0' + i);
         pair.value.setOwnBuffer(vbuf);
 
-        try pairs.append(pair);
+        try pairs.append(allocator, pair);
     }
 
     // deletePairs should clean up all buffers and the list itself
