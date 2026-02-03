@@ -1,7 +1,7 @@
 const std = @import("std");
-const EnvValue = @import("env_value.zig").EnvValue;
-const VariablePosition = @import("variable_position.zig").VariablePosition;
-const whitespace_utils = @import("whitespace_utils.zig");
+const EnvValue = @import("../data/env_value.zig").EnvValue;
+const VariablePosition = @import("../data/variable_position.zig").VariablePosition;
+const whitespace_utils = @import("../utils/whitespace_utils.zig");
 
 /// Search backward from current position to find `$` that precedes `{`.
 /// Returns position of `$` or null if not found or if escaped.

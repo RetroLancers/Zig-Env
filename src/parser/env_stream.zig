@@ -59,6 +59,14 @@ pub const EnvStream = struct {
     pub fn eof(self: EnvStream) bool {
         return self.index >= self.length;
     }
+
+    pub fn skipToNewline(self: *EnvStream) void {
+        while (true) {
+            const char_opt = self.get();
+            if (char_opt == null) break;
+            if (char_opt.? == '\n') break;
+        }
+    }
 };
 
 test "EnvStream basic reading" {

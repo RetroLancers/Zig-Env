@@ -2,9 +2,11 @@
     "name": "buffer-management",
     "description": "Buffer handling and ArrayList replacement",
     "files": [
-        "src/reusable_buffer.zig",
+        "src/buffer/reusable_buffer.zig",
+        "src/buffer/buffer_utils.zig",
+        "src/buffer/memory_utils.zig",
         "src/lib.zig",
-        "src/env_value.zig",
+        "src/data/env_value.zig",
         "benchmarks/allocation_benchmark.zig",
         "Tasks/in_progress/22_replace_arraylist_usage.md"
     ]

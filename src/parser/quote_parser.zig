@@ -1,6 +1,6 @@
 const std = @import("std");
-const EnvValue = @import("env_value.zig").EnvValue;
-const buffer_utils = @import("buffer_utils.zig");
+const EnvValue = @import("../data/env_value.zig").EnvValue;
+const buffer_utils = @import("../buffer/buffer_utils.zig");
 
 /// Detect and process single quote sequences.
 /// Returns true if end quotes detected and input should stop.

@@ -1,5 +1,5 @@
 const std = @import("std");
-const ReusableBuffer = @import("reusable_buffer.zig").ReusableBuffer;
+const ReusableBuffer = @import("../buffer/reusable_buffer.zig").ReusableBuffer;
 
 pub const EnvKey = struct {
     key: []const u8,

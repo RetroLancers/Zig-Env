@@ -1,55 +1,16 @@
 const std = @import("std");
-const reader = @import("reader.zig");
-const finalizer = @import("finalizer.zig");
-const EnvStream = @import("env_stream.zig").EnvStream;
-const memory = @import("memory.zig");
-const file_scanner = @import("file_scanner.zig");
-const ReusableBuffer = @import("reusable_buffer.zig").ReusableBuffer;
-const EnvPair = @import("env_pair.zig").EnvPair;
+const read_pair = @import("parser/read_pair.zig");
+const finalizer = @import("interpolation/finalizer.zig");
+const EnvStream = @import("parser/env_stream.zig").EnvStream;
+const memory = @import("buffer/memory_utils.zig");
+const file_scanner = @import("parser/file_scanner.zig");
+const ReusableBuffer = @import("buffer/reusable_buffer.zig").ReusableBuffer;
+const EnvPair = @import("data/env_pair.zig").EnvPair;
 const Allocator = std.mem.Allocator;
+const Env = @import("data/env.zig").Env;
 
 /// Parser configuration options for controlling parsing behavior.
-pub const ParserOptions = reader.ParserOptions;
-
-pub const Env = struct {
-    map: std.StringHashMap([]const u8),
-    allocator: Allocator,
-
-    pub fn init(allocator: Allocator) Env {
-        return .{
-            .map = std.StringHashMap([]const u8).init(allocator),
-            .allocator = allocator,
-        };
-    }
-
-    pub fn deinit(self: *Env) void {
-        var it = self.map.iterator();
-        while (it.next()) |entry| {
-            self.allocator.free(entry.key_ptr.*);
-            self.allocator.free(entry.value_ptr.*);
-        }
-        self.map.deinit();
-    }
-
-    pub fn get(self: Env, key: []const u8) ?[]const u8 {
-        return self.map.get(key);
-    }
-
-    pub fn getWithDefault(self: Env, key: []const u8, default: []const u8) []const u8 {
-        return self.map.get(key) orelse default;
-    }
-
-    /// Internal helper to put owned strings into the map
-    fn put(self: *Env, key: []const u8, value: []const u8) !void {
-        const gop = try self.map.getOrPut(key);
-        if (gop.found_existing) {
-            self.allocator.free(gop.key_ptr.*);
-            self.allocator.free(gop.value_ptr.*);
-            gop.key_ptr.* = key;
-        }
-        gop.value_ptr.* = value;
-    }
-};
+pub const ParserOptions = @import("data/parser_options.zig").ParserOptions;
 
 /// High-level API to parse a .env file from disk
 pub fn parseFile(allocator: Allocator, path: []const u8) !Env {
@@ -79,7 +40,7 @@ pub fn parseStringWithOptions(allocator: Allocator, content: []const u8, options
 
     var stream = EnvStream.init(content);
     // Use hints to initialize buffers with appropriate capacity
-    var pairs = try reader.readPairsWithHints(allocator, &stream, hints, options);
+    var pairs = try read_pair.readPairsWithHints(allocator, &stream, hints, options);
     errdefer memory.deletePairs(allocator, &pairs);
 
     try finalizer.finalizeAllValues(allocator, &pairs);

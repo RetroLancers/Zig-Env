@@ -1,6 +1,6 @@
 const std = @import("std");
 const VariablePosition = @import("variable_position.zig").VariablePosition;
-const ReusableBuffer = @import("reusable_buffer.zig").ReusableBuffer;
+const ReusableBuffer = @import("../buffer/reusable_buffer.zig").ReusableBuffer;
 
 pub const EnvValue = struct {
     value: []const u8,

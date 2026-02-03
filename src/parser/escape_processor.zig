@@ -1,6 +1,6 @@
 const std = @import("std");
-const EnvValue = @import("env_value.zig").EnvValue;
-const addToBuffer = @import("buffer_utils.zig").addToBuffer;
+const EnvValue = @import("../data/env_value.zig").EnvValue;
+const addToBuffer = @import("../buffer/buffer_utils.zig").addToBuffer;
 
 /// Convert pairs of `\\` to single `\`, leave odd backslash for control char processing.
 /// This processes the pending streak of backslashes.

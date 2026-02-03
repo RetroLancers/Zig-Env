@@ -1,7 +1,7 @@
 const std = @import("std");
-const EnvPair = @import("env_pair.zig").EnvPair;
-const FinalizeResult = @import("result_enums.zig").FinalizeResult;
-const VariablePosition = @import("variable_position.zig").VariablePosition;
+const EnvPair = @import("../data/env_pair.zig").EnvPair;
+const FinalizeResult = @import("../data/read_result.zig").FinalizeResult;
+const VariablePosition = @import("../data/variable_position.zig").VariablePosition;
 
 /// Finalizes all values in the provided list of pairs.
 pub fn finalizeAllValues(allocator: std.mem.Allocator, pairs: *std.ArrayListUnmanaged(EnvPair)) !void {

@@ -1,5 +1,5 @@
 const std = @import("std");
-const EnvValue = @import("env_value.zig").EnvValue;
+const EnvValue = @import("../data/env_value.zig").EnvValue;
 
 /// Add a character to the value buffer, resizing if needed.
 /// This implementation relies on ReusableBuffer inside EnvValue.

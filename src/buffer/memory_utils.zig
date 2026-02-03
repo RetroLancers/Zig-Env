@@ -1,7 +1,7 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
-const EnvPair = @import("env_pair.zig").EnvPair;
+const EnvPair = @import("../data/env_pair.zig").EnvPair;
 
 /// Clean up all memory for a single EnvPair
 pub fn deletePair(allocator: Allocator, pair: *EnvPair) void {

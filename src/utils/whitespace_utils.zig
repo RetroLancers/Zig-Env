@@ -1,5 +1,5 @@
 const std = @import("std");
-const VariablePosition = @import("variable_position.zig").VariablePosition;
+const VariablePosition = @import("../data/variable_position.zig").VariablePosition;
 
 /// Count left whitespace inside ${...} for trimming.
 /// This replicates the C++ logic: it starts at variable_start and walks backwards to start_brace.
