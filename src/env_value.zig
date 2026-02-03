@@ -4,7 +4,7 @@ const ReusableBuffer = @import("reusable_buffer.zig").ReusableBuffer;
 
 pub const EnvValue = struct {
     value: []const u8,
-    interpolations: std.ArrayList(VariablePosition),
+    interpolations: std.ArrayListUnmanaged(VariablePosition),
 
     // Parsing state
     is_parsing_variable: bool,

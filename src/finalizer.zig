@@ -4,14 +4,14 @@ const FinalizeResult = @import("result_enums.zig").FinalizeResult;
 const VariablePosition = @import("variable_position.zig").VariablePosition;
 
 /// Finalizes all values in the provided list of pairs.
-pub fn finalizeAllValues(allocator: std.mem.Allocator, pairs: *std.ArrayList(EnvPair)) !void {
+pub fn finalizeAllValues(allocator: std.mem.Allocator, pairs: *std.ArrayListUnmanaged(EnvPair)) !void {
     for (pairs.items) |*pair| {
         _ = try finalizeValue(allocator, pair, pairs);
     }
 }
 
 /// Recursively finalizes a single value, resolving all variable interpolations.
-pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *std.ArrayList(EnvPair)) !FinalizeResult {
+pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *std.ArrayListUnmanaged(EnvPair)) !FinalizeResult {
     if (pair.value.is_already_interpolated) {
         return .copied;
     }
@@ -60,7 +60,7 @@ pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *std.A
     return if (result_status == .interpolated) .interpolated else .copied;
 }
 
-fn findPairByKey(pairs: *std.ArrayList(EnvPair), key: []const u8) ?*EnvPair {
+fn findPairByKey(pairs: *std.ArrayListUnmanaged(EnvPair), key: []const u8) ?*EnvPair {
     for (pairs.items) |*pair| {
         if (std.mem.eql(u8, pair.key.key, key)) {
             return pair;
@@ -100,7 +100,7 @@ fn replaceInterpolation(allocator: std.mem.Allocator, pair: *EnvPair, interp_idx
 
 test "finalizeValue - basic substitution" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayList(EnvPair){};
+    var pairs = std.ArrayListUnmanaged(EnvPair){};
     defer {
         for (pairs.items) |*p| p.deinit();
         pairs.deinit(allocator);
@@ -127,7 +127,7 @@ test "finalizeValue - basic substitution" {
 
 test "finalizeValue - recursive substitution" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayList(EnvPair){};
+    var pairs = std.ArrayListUnmanaged(EnvPair){};
     defer {
         for (pairs.items) |*p| p.deinit();
         pairs.deinit(allocator);
@@ -167,7 +167,7 @@ test "finalizeValue - recursive substitution" {
 
 test "finalizeValue - circular dependency" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayList(EnvPair){};
+    var pairs = std.ArrayListUnmanaged(EnvPair){};
     defer {
         for (pairs.items) |*p| p.deinit();
         pairs.deinit(allocator);
@@ -201,7 +201,7 @@ test "finalizeValue - circular dependency" {
 
 test "finalizeValue - missing variable" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayList(EnvPair){};
+    var pairs = std.ArrayListUnmanaged(EnvPair){};
     defer {
         for (pairs.items) |*p| p.deinit();
         pairs.deinit(allocator);
@@ -223,7 +223,7 @@ test "finalizeValue - missing variable" {
 
 test "finalizeValue - multiple interpolations in reverse order" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayList(EnvPair){};
+    var pairs = std.ArrayListUnmanaged(EnvPair){};
     defer {
         for (pairs.items) |*p| p.deinit();
         pairs.deinit(allocator);
@@ -259,7 +259,7 @@ test "finalizeValue - multiple interpolations in reverse order" {
 
 test "finalizeValue - indirect circular dependency" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayList(EnvPair){};
+    var pairs = std.ArrayListUnmanaged(EnvPair){};
     defer {
         for (pairs.items) |*p| p.deinit();
         pairs.deinit(allocator);
@@ -302,7 +302,7 @@ test "finalizeValue - indirect circular dependency" {
 
 test "finalizeValue - same variable twice" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayList(EnvPair){};
+    var pairs = std.ArrayListUnmanaged(EnvPair){};
     defer {
         for (pairs.items) |*p| p.deinit();
         pairs.deinit(allocator);

@@ -1,6 +1,6 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const ArrayList = std.ArrayList;
+const ArrayListUnmanaged = std.ArrayListUnmanaged;
 const EnvPair = @import("env_pair.zig").EnvPair;
 
 /// Clean up all memory for a single EnvPair
@@ -13,7 +13,7 @@ pub fn deletePair(allocator: Allocator, pair: *EnvPair) void {
 }
 
 /// Clean up all pairs in the list
-pub fn deletePairs(allocator: Allocator, pairs: *ArrayList(EnvPair)) void {
+pub fn deletePairs(allocator: Allocator, pairs: *ArrayListUnmanaged(EnvPair)) void {
     for (pairs.items) |*pair| {
         pair.deinit();
     }
@@ -22,7 +22,7 @@ pub fn deletePairs(allocator: Allocator, pairs: *ArrayList(EnvPair)) void {
 
 test "deletePairs cleans up everything" {
     const allocator = std.testing.allocator;
-    var pairs = ArrayList(EnvPair){};
+    var pairs = ArrayListUnmanaged(EnvPair){};
     // errdefer deletePairs(allocator, &pairs); // In case of failure in this test
 
     // Create some pairs with owned buffers

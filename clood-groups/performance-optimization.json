@@ -6,6 +6,7 @@
         "src/env_key.zig",
         "src/env_value.zig",
         "src/env_pair.zig",
-        "Tasks/in_progress/15_implement_file_prescanning.md"
+        "src/reusable_buffer.zig",
+        "Tasks/in_progress/16_integrate_prescanning_with_dynamic_growth.md"
     ]
 }

@@ -9,6 +9,7 @@ const quote_parser = @import("quote_parser.zig");
 const interpolation = @import("interpolation.zig");
 const testing = std.testing;
 const memory = @import("memory.zig");
+const file_scanner = @import("file_scanner.zig");
 
 pub fn clearGarbage(stream: *EnvStream) void {
     while (true) {
@@ -320,12 +321,21 @@ pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair
 
 const EnvPair = @import("env_pair.zig").EnvPair;
 
-pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayList(EnvPair) {
-    var pairs = std.ArrayList(EnvPair){};
+pub fn readPairsWithHints(
+    allocator: std.mem.Allocator,
+    stream: *EnvStream,
+    hints: file_scanner.BufferSizeHints,
+) !std.ArrayListUnmanaged(EnvPair) {
+    var pairs = std.ArrayListUnmanaged(EnvPair){};
     errdefer memory.deletePairs(allocator, &pairs);
 
     while (true) {
-        var pair = EnvPair.init(allocator);
+        // Use capacity hints for initialization
+        var pair = try EnvPair.initWithCapacity(
+            allocator,
+            hints.max_key_size,
+            hints.max_value_size,
+        );
 
         const result = try readPair(allocator, stream, &pair);
         if (result == ReadResult.end_of_stream_value) {
@@ -347,6 +357,15 @@ pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayLis
     }
 
     return pairs;
+}
+
+pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayListUnmanaged(EnvPair) {
+    // Use default hints (0 capacity = start small)
+    const default_hints = file_scanner.BufferSizeHints{
+        .max_key_size = 0,
+        .max_value_size = 0,
+    };
+    return readPairsWithHints(allocator, stream, default_hints);
 }
 
 test "clearGarbage clears to newline" {

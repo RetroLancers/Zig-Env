@@ -3,6 +3,7 @@ const reader = @import("reader.zig");
 const finalizer = @import("finalizer.zig");
 const EnvStream = @import("env_stream.zig").EnvStream;
 const memory = @import("memory.zig");
+const file_scanner = @import("file_scanner.zig");
 const EnvPair = @import("env_pair.zig").EnvPair;
 const Allocator = std.mem.Allocator;
 
@@ -53,8 +54,12 @@ pub fn parseFile(allocator: Allocator, path: []const u8) !Env {
 
 /// Parse .env content from a string
 pub fn parseString(allocator: Allocator, content: []const u8) !Env {
+    // Pre-scan for buffer size hints to optimize allocations
+    const hints = file_scanner.scanBufferSizes(content);
+
     var stream = EnvStream.init(content);
-    var pairs = try reader.readPairs(allocator, &stream);
+    // Use hints to initialize buffers with appropriate capacity
+    var pairs = try reader.readPairsWithHints(allocator, &stream, hints);
     errdefer memory.deletePairs(allocator, &pairs);
 
     try finalizer.finalizeAllValues(allocator, &pairs);
@@ -142,4 +147,59 @@ test "Env methods" {
     try std.testing.expectEqualStrings("V", env.get("K").?);
     try std.testing.expectEqualStrings("V", env.getWithDefault("K", "D"));
     try std.testing.expectEqualStrings("D", env.getWithDefault("MISSING", "D"));
+}
+
+test "parsing with pre-scan optimization" {
+    const allocator = std.testing.allocator;
+    const content =
+        \\SMALL=x
+        \\MEDIUM_KEY=medium_value
+        \\VERY_LONG_KEY_NAME=very_long_value_content_here
+    ;
+
+    var env = try parseString(allocator, content);
+    defer env.deinit();
+
+    // Should work correctly with pre-scanned sizes
+    try std.testing.expectEqualStrings("x", env.get("SMALL").?);
+    try std.testing.expectEqualStrings("medium_value", env.get("MEDIUM_KEY").?);
+    try std.testing.expectEqualStrings("very_long_value_content_here", env.get("VERY_LONG_KEY_NAME").?);
+}
+
+test "parsing with underestimated buffers grows correctly" {
+    const allocator = std.testing.allocator;
+
+    // Create content where value is longer than scanner might estimate
+    const content =
+        \\KEY="""
+        \\This is a heredoc with lots of content
+        \\that might not be perfectly estimated
+        \\by the pre-scanner heuristic
+        \\"""
+    ;
+
+    var env = try parseString(allocator, content);
+    defer env.deinit();
+
+    // Should still parse correctly even if initial size was wrong
+    try std.testing.expect(env.get("KEY") != null);
+    try std.testing.expect(std.mem.indexOf(u8, env.get("KEY").?, "heredoc") != null);
+}
+
+test "large file performance" {
+    const allocator = std.testing.allocator;
+
+    // Generate a large env file
+    var buffer = std.ArrayList(u8).init(allocator);
+    defer buffer.deinit();
+
+    var i: usize = 0;
+    while (i < 1000) : (i += 1) {
+        try buffer.writer().print("KEY_{d}=VALUE_{d}\n", .{ i, i });
+    }
+
+    var env = try parseString(allocator, buffer.items);
+    defer env.deinit();
+
+    try std.testing.expectEqual(@as(usize, 1000), env.map.count());
 }

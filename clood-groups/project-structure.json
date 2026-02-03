@@ -6,7 +6,6 @@
         "build.zig.zon",
         "README.md",
         "src/root.zig",
-        "src/lib.zig",
-        "Tasks/in_progress/14_verify_zig_0_15_compatibility.md"
+        "src/lib.zig"
     ]
 }

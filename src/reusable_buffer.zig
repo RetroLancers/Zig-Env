@@ -51,16 +51,31 @@ pub const ReusableBuffer = struct {
         self.* = undefined;
     }
 
-    /// Append a single byte to the buffer, growing if necessary
+    /// Append a single byte to the buffer, growing by 30% if necessary
     pub fn append(self: *ReusableBuffer, item: u8) !void {
-        try self.ensureUnusedCapacity(1);
+        if (self.items.len >= self.capacity) {
+            try self.ensureCapacityWithGrowth(self.items.len + 1, 30);
+        }
         self.appendAssumeCapacity(item);
     }
 
-    /// Append multiple bytes to the buffer, growing if necessary
+    /// Append multiple bytes to the buffer, growing by 30% if necessary
     pub fn appendSlice(self: *ReusableBuffer, items: []const u8) !void {
-        try self.ensureUnusedCapacity(items.len);
+        const needed = self.items.len + items.len;
+        if (needed > self.capacity) {
+            try self.ensureCapacityWithGrowth(needed, 30);
+        }
         self.appendSliceAssumeCapacity(items);
+    }
+
+    /// Ensures capacity, growing by specified percentage if needed
+    pub fn ensureCapacityWithGrowth(self: *ReusableBuffer, new_capacity: usize, growth_percent: u8) !void {
+        if (new_capacity <= self.capacity) return;
+
+        const growth_factor = @as(f32, @floatFromInt(100 + growth_percent)) / 100.0;
+        const new_size = @max(new_capacity, @as(usize, @intFromFloat(@as(f32, @floatFromInt(self.capacity)) * growth_factor)));
+
+        try self.ensureCapacity(new_size);
     }
 
     /// Resize the buffer to a new length
@@ -68,7 +83,7 @@ pub const ReusableBuffer = struct {
     /// If shrinking, excess bytes are dropped but capacity is retained
     pub fn resize(self: *ReusableBuffer, new_len: usize) !void {
         if (new_len > self.capacity) {
-            try self.ensureTotalCapacity(new_len);
+            try self.ensureCapacity(new_len);
         }
         self.items = self.items.ptr[0..new_len];
     }
@@ -119,26 +134,21 @@ pub const ReusableBuffer = struct {
         if (self.capacity >= needed_capacity) {
             return;
         }
-        try self.ensureTotalCapacity(needed_capacity);
+        try self.ensureCapacity(needed_capacity);
     }
 
-    fn ensureTotalCapacity(self: *ReusableBuffer, new_capacity: usize) !void {
+    fn ensureCapacity(self: *ReusableBuffer, new_capacity: usize) !void {
         if (self.capacity >= new_capacity) {
             return;
         }
 
-        var better_capacity = self.capacity;
-        while (better_capacity < new_capacity) {
-            better_capacity += better_capacity / 2 + 8;
-        }
-
         const new_memory = if (self.capacity > 0)
-            try self.allocator.realloc(self.items.ptr[0..self.capacity], better_capacity)
+            try self.allocator.realloc(self.items.ptr[0..self.capacity], new_capacity)
         else
-            try self.allocator.alloc(u8, better_capacity);
+            try self.allocator.alloc(u8, new_capacity);
 
         self.items = new_memory[0..self.items.len];
-        self.capacity = better_capacity;
+        self.capacity = new_capacity;
     }
 
     fn appendAssumeCapacity(self: *ReusableBuffer, item: u8) void {
