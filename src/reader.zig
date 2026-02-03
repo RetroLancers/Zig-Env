@@ -334,7 +334,11 @@ pub fn readPairsWithHints(
     hints: file_scanner.BufferSizeHints,
     options: ParserOptions,
 ) !std.ArrayListUnmanaged(EnvPair) {
+    // Pre-allocate capacity if we have a pair count estimate
     var pairs = std.ArrayListUnmanaged(EnvPair){};
+    if (hints.estimated_pair_count > 0) {
+        try pairs.ensureTotalCapacity(allocator, hints.estimated_pair_count);
+    }
     errdefer memory.deletePairs(allocator, &pairs);
 
     while (true) {
@@ -376,6 +380,7 @@ pub fn readPairsWithOptions(allocator: std.mem.Allocator, stream: *EnvStream, op
     const default_hints = file_scanner.BufferSizeHints{
         .max_key_size = 0,
         .max_value_size = 0,
+        .estimated_pair_count = 0,
     };
     return readPairsWithHints(allocator, stream, default_hints, options);
 }

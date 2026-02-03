@@ -7,8 +7,9 @@
         "src/env_value.zig",
         "src/env_pair.zig",
         "src/reusable_buffer.zig",
+        "src/reader.zig",
         "benchmarks/allocation_benchmark.zig",
         "docs/Performance.md",
-        "Tasks/in_progress/17_benchmark_allocation_optimization.md"
+        "Tasks/completed/18_prescanner_pair_count_estimation.md"
     ]
 }

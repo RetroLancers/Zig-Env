@@ -102,14 +102,14 @@ test "scan counts pairs with empty lines" {
 ```
 
 ## Success Criteria
-- [ ] `BufferSizeHints` struct updated with `estimated_pair_count` field
-- [ ] `scanBufferSizes()` counts pairs during scanning
-- [ ] Pair count is reasonably accurate for simple files
-- [ ] Heredocs cause acceptable over-counting (not under-counting)
-- [ ] All existing tests still pass
-- [ ] New pair count tests added and passing
-- [ ] Callers updated to use the new field (if applicable)
-- [ ] Pre-allocation of pairs array implemented where feasible
+- [x] `BufferSizeHints` struct updated with `estimated_pair_count` field
+- [x] `scanBufferSizes()` counts pairs during scanning
+- [x] Pair count is reasonably accurate for simple files
+- [x] Heredocs cause acceptable over-counting (not under-counting)
+- [x] All existing tests still pass
+- [x] New pair count tests added and passing
+- [x] Callers updated to use the new field (if applicable)
+- [x] Pre-allocation of pairs array implemented where feasible
 
 ## Dependencies
 - Task 15 (file_scanner.zig must exist) ✓
