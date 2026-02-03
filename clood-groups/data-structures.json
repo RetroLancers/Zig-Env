@@ -8,6 +8,8 @@
         "src/env_value.zig",
         "src/env_pair.zig",
         "src/variable_position.zig",
-        "src/result_enums.zig"
+        "src/result_enums.zig",
+        "Tasks/completed/10_create_reusable_buffer.md",
+        "Tasks/completed/11_migrate_envkey_to_reusable_buffer.md"
     ]
 }

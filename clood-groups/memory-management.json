@@ -3,6 +3,7 @@
     "description": "Memory cleanup and ownership management",
     "files": [
         "src/memory.zig",
+        "src/reusable_buffer.zig",
         "src/env_stream.zig",
         "src/env_key.zig",
         "src/env_value.zig",
