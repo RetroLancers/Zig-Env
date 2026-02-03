@@ -37,6 +37,13 @@ pub fn build(b: *std.Build) void {
         "tests/garbage_after_quote.zig",
         "tests/single_quote_heredoc_test.zig",
         "tests/braceless_variable_test.zig",
+        "tests/whitespace_interpolation_test.zig",
+        // Extensive test suite - temporarily commented out for rebuilding
+        // "tests/file_based_tests.zig",
+        // "tests/edge_cases_comprehensive.zig",
+        // "tests/unicode_tests.zig",
+        // "tests/windows_tests.zig",
+        // "tests/stress_tests.zig",
     };
 
     for (test_files) |test_file| {
