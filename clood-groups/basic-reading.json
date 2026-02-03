@@ -3,5 +3,6 @@
     "src/reusable_buffer.zig",
     "src/env_stream.zig",
     "src/env_key.zig",
-    "src/result_enums.zig"
+    "src/result_enums.zig",
+    "Tasks/in_progress/20_windows_carriage_return_handling.md"
 ]

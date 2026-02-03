@@ -23,7 +23,7 @@ The original C++ implementation (`cppnv`) is a feature-complete .env parser used
 ### Supported (from C++ version)
 
 - ✅ **Basic key-value parsing** - Standard `KEY=value` syntax
-- ✅ **Variable interpolation** - `${variable}` references with recursive resolution
+- ✅ **Variable interpolation** - `${variable}` (and opt-in `$variable`) references with recursive resolution
 - ✅ **Multiple quote types**:
   - Single quotes (`'...'`) - No interpolation or escape codes
   - Double quotes (`"..."`) - Interpolation + escape codes

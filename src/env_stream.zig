@@ -1,5 +1,7 @@
 const std = @import("std");
 const testing = std.testing;
+const builtin = @import("builtin");
+const is_windows = builtin.os.tag == .windows;
 
 pub const EnvStream = struct {
     data: []const u8,
@@ -29,6 +31,18 @@ pub const EnvStream = struct {
 
         const char = self.data[self.index];
         self.index += 1;
+
+        // On Windows, skip \r before \n
+        if (comptime is_windows) {
+            if (char == '\r') {
+                // Peek at next char
+                if (self.index < self.length and self.data[self.index] == '\n') {
+                    // Skip the \r, return the \n
+                    return self.get();
+                }
+            }
+        }
+
         return char;
     }
 
@@ -82,4 +96,60 @@ test "EnvStream state tracking" {
 
     _ = stream.get(); // Read past EOF
     try testing.expect(!stream.good()); // Now bad
+}
+
+test "EnvStream CRLF handling" {
+    // Simulate Windows-style content
+    const content = "KEY=value\r\nOTHER=test\r\n";
+    var stream = EnvStream.init(content);
+
+    // Read characters
+    var result: [32]u8 = undefined;
+    var i: usize = 0;
+    while (stream.get()) |c| {
+        result[i] = c;
+        i += 1;
+    }
+
+    // On Windows, \r should be stripped before \n
+    if (comptime is_windows) {
+        try testing.expectEqualStrings("KEY=value\nOTHER=test\n", result[0..i]);
+    } else {
+        // On non-Windows, both should remain (unless we change the design)
+        try testing.expectEqualStrings("KEY=value\r\nOTHER=test\r\n", result[0..i]);
+    }
+}
+
+test "EnvStream standalone CR not stripped" {
+    // Only \r\n pairs should be collapsed, not standalone \r
+    const content = "KEY=val\rue\n"; // CR in middle of value
+    var stream = EnvStream.init(content);
+
+    var result: [32]u8 = undefined;
+    var i: usize = 0;
+    while (stream.get()) |c| {
+        result[i] = c;
+        i += 1;
+    }
+
+    // Even on Windows, standalone \r is preserved
+    try testing.expectEqualStrings("KEY=val\rue\n", result[0..i]);
+}
+
+test "EnvStream mixed line endings" {
+    const content = "LF\nCRLF\r\nLF\n";
+    var stream = EnvStream.init(content);
+
+    var result: [32]u8 = undefined;
+    var i: usize = 0;
+    while (stream.get()) |c| {
+        result[i] = c;
+        i += 1;
+    }
+
+    if (comptime is_windows) {
+        try testing.expectEqualStrings("LF\nCRLF\nLF\n", result[0..i]);
+    } else {
+        try testing.expectEqualStrings("LF\nCRLF\r\nLF\n", result[0..i]);
+    }
 }

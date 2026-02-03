@@ -121,12 +121,12 @@ test "standalone CR not stripped" {
 ```
 
 ## Success Criteria
-- [ ] `\r\n` is converted to `\n` on Windows
-- [ ] Standalone `\r` (not followed by `\n`) is preserved
-- [ ] Zero runtime overhead on non-Windows platforms (comptime check)
-- [ ] Existing tests pass
-- [ ] New CRLF tests pass on Windows
-- [ ] No memory leaks introduced
+- [x] `\r\n` is converted to `\n` on Windows
+- [x] Standalone `\r` (not followed by `\n`) is preserved
+- [x] Zero runtime overhead on non-Windows platforms (comptime check)
+- [x] Existing tests pass
+- [x] New CRLF tests pass on Windows
+- [x] No memory leaks introduced
 
 ## Implementation Notes
 
