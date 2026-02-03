@@ -105,8 +105,7 @@ pub fn closeVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
 }
 
 /// After parsing completes, remove any interpolation that wasn't closed with `}`.
-pub fn removeUnclosedInterpolation(allocator: std.mem.Allocator, value: *EnvValue) void {
-    _ = allocator;
+pub fn removeUnclosedInterpolation(value: *EnvValue) void {
     var i: usize = value.interpolations.items.len;
     while (i > 0) {
         i -= 1;
@@ -127,7 +126,7 @@ pub fn removeUnclosedInterpolation(allocator: std.mem.Allocator, value: *EnvValu
 
 test "positionOfDollarLastSign basic" {
     var val = EnvValue.init(std.testing.allocator);
-    defer val.deinit(std.testing.allocator);
+    defer val.deinit();
 
     // Simulate content
     // "abc$ {"
@@ -145,7 +144,7 @@ test "positionOfDollarLastSign basic" {
 
 test "positionOfDollarLastSign with escape" {
     var val = EnvValue.init(std.testing.allocator);
-    defer val.deinit(std.testing.allocator);
+    defer val.deinit();
 
     try val.buffer.appendSlice("abc\\$");
     val.value = val.buffer.items;
@@ -157,7 +156,7 @@ test "positionOfDollarLastSign with escape" {
 
 test "open and close variable" {
     var val = EnvValue.init(std.testing.allocator);
-    defer val.deinit(std.testing.allocator);
+    defer val.deinit();
 
     // Parsing "Hello ${name}"
     // 1. "Hello "

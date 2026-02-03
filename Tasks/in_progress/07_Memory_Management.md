@@ -32,12 +32,12 @@ Use `std.testing.allocator` for automatic leak detection in tests.
 
 ## Checklist
 
-- [ ] Create `src/memory.zig`
-- [ ] Implement `deletePair` and `deletePairs`
-- [ ] Add `deinit` to all structs
-- [ ] Add proper `errdefer` in allocation paths
-- [ ] Create memory leak tests
-- [ ] Update `src/root.zig`
+- [x] Create `src/memory.zig`
+- [x] Implement `deletePair` and `deletePairs`
+- [x] Add `deinit` to all structs
+- [x] Add proper `errdefer` in allocation paths
+- [x] Create memory leak tests
+- [x] Update `src/root.zig`
 
 ## Dependencies
 - Task 01 (Core Data Structures)

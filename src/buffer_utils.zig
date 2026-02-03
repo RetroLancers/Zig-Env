@@ -22,7 +22,7 @@ pub fn isPreviousCharAnEscape(value: *const EnvValue) bool {
 test "addToBuffer" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     try addToBuffer(&val, 'a');
     try addToBuffer(&val, 'b');
@@ -35,17 +35,17 @@ test "addToBuffer" {
 test "isPreviousCharAnEscape" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     try addToBuffer(&val, '\\');
     try addToBuffer(&val, '{');
-    
+
     // index is 2. char at index 0 is \, char at index 1 is {.
     // isPreviousCharAnEscape checks index [2-2] = 0.
     try std.testing.expect(isPreviousCharAnEscape(&val));
 
     var val2 = EnvValue.init(allocator);
-    defer val2.deinit(allocator);
+    defer val2.deinit();
     try addToBuffer(&val2, 'a');
     try addToBuffer(&val2, '{');
     try std.testing.expect(!isPreviousCharAnEscape(&val2));

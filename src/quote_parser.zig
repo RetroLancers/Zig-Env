@@ -95,7 +95,7 @@ pub fn walkDoubleQuotes(value: *EnvValue) !bool {
 test "walkSingleQuotes - basic" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     // Initial parsing
     val.single_quote_streak = 1;
@@ -115,7 +115,7 @@ test "walkSingleQuotes - basic" {
 test "walkSingleQuotes - empty" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.single_quote_streak = 2;
     const stop = try walkSingleQuotes(&val);
@@ -126,7 +126,7 @@ test "walkSingleQuotes - empty" {
 test "walkSingleQuotes - heredoc" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.single_quote_streak = 3;
     _ = try walkSingleQuotes(&val);
@@ -143,7 +143,7 @@ test "walkSingleQuotes - heredoc" {
 test "walkSingleQuotes - excess quotes start" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.single_quote_streak = 5; // ''' + ''
     _ = try walkSingleQuotes(&val);
@@ -154,7 +154,7 @@ test "walkSingleQuotes - excess quotes start" {
 test "walkSingleQuotes - excess quotes end" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.single_quote_streak = 3;
     _ = try walkSingleQuotes(&val);
@@ -170,7 +170,7 @@ test "walkSingleQuotes - excess quotes end" {
 test "walkDoubleQuotes - basic" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.double_quote_streak = 1;
     _ = try walkDoubleQuotes(&val);
@@ -187,7 +187,7 @@ test "walkDoubleQuotes - basic" {
 test "walkDoubleQuotes - single quotes inside" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.double_quote_streak = 1;
     _ = try walkDoubleQuotes(&val);
@@ -207,7 +207,7 @@ test "walkDoubleQuotes - single quotes inside" {
 test "walkSingleQuotes - double quotes inside" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.single_quote_streak = 1;
     _ = try walkSingleQuotes(&val);
@@ -225,7 +225,7 @@ test "walkSingleQuotes - double quotes inside" {
 test "walkDoubleQuotes - empty" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.double_quote_streak = 2;
     const stop = try walkDoubleQuotes(&val);
@@ -236,7 +236,7 @@ test "walkDoubleQuotes - empty" {
 test "walkDoubleQuotes - heredoc" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.double_quote_streak = 3;
     _ = try walkDoubleQuotes(&val);
@@ -252,7 +252,7 @@ test "walkDoubleQuotes - heredoc" {
 test "walkDoubleQuotes - excess" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.double_quote_streak = 4;
     _ = try walkDoubleQuotes(&val);

@@ -16,6 +16,7 @@ pub const quote_parser = @import("quote_parser.zig");
 pub const interpolation = @import("interpolation.zig");
 pub const finalizer = @import("finalizer.zig");
 pub const reader = @import("reader.zig");
+pub const memory = @import("memory.zig");
 
 test {
     _ = @import("env_stream.zig");
@@ -31,4 +32,5 @@ test {
     _ = @import("interpolation.zig");
     _ = @import("finalizer.zig");
     _ = @import("reader.zig");
+    _ = @import("memory.zig");
 }

@@ -8,6 +8,7 @@ const escape_processor = @import("escape_processor.zig");
 const quote_parser = @import("quote_parser.zig");
 const interpolation = @import("interpolation.zig");
 const testing = std.testing;
+const memory = @import("memory.zig");
 
 pub fn clearGarbage(stream: *EnvStream) void {
     while (true) {
@@ -296,10 +297,10 @@ pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair
     // Copy key to own buffer
     if (!pair.key.hasOwnBuffer()) {
         const tmp_str = try allocator.alloc(u8, pair.key.key_index);
-        @memcpy(tmp_str, pair.key.key[0..pair.key.key_index]);
-        pair.key.setOwnBuffer(allocator, tmp_str);
+        errdefer allocator.free(tmp_str);
+        pair.key.setOwnBuffer(tmp_str);
     } else {
-        try pair.key.clipOwnBuffer(allocator, pair.key.key_index);
+        try pair.key.clipOwnBuffer(pair.key.key_index);
     }
 
     // Read value
@@ -312,26 +313,27 @@ pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair
         // Copy value to own buffer
         if (!pair.value.hasOwnBuffer()) {
             const tmp_str = try allocator.alloc(u8, pair.value.value_index);
+            errdefer allocator.free(tmp_str);
             @memcpy(tmp_str, pair.value.value[0..pair.value.value_index]);
-            pair.value.setOwnBuffer(allocator, tmp_str);
+            pair.value.setOwnBuffer(tmp_str);
         } else {
-            try pair.value.clipOwnBuffer(allocator, pair.value.value_index);
+            try pair.value.clipOwnBuffer(pair.value.value_index);
         }
-        interpolation.removeUnclosedInterpolation(allocator, &pair.value);
+        interpolation.removeUnclosedInterpolation(&pair.value);
         return ReadResult.success;
     }
 
     if (value_result == ReadResult.empty) {
-        interpolation.removeUnclosedInterpolation(allocator, &pair.value);
+        interpolation.removeUnclosedInterpolation(&pair.value);
         return ReadResult.empty;
     }
 
     if (value_result == ReadResult.end_of_stream_key) {
-        interpolation.removeUnclosedInterpolation(allocator, &pair.value);
+        interpolation.removeUnclosedInterpolation(&pair.value);
         return ReadResult.end_of_stream_key;
     }
 
-    interpolation.removeUnclosedInterpolation(allocator, &pair.value);
+    interpolation.removeUnclosedInterpolation(&pair.value);
     return ReadResult.fail;
 }
 
@@ -339,13 +341,7 @@ const EnvPair = @import("env_pair.zig").EnvPair;
 
 pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayList(EnvPair) {
     var pairs = std.ArrayList(EnvPair).init(allocator);
-    errdefer {
-        // Clean up all pairs on error
-        for (pairs.items) |*pair| {
-            pair.deinit(allocator);
-        }
-        pairs.deinit();
-    }
+    errdefer memory.deletePairs(allocator, &pairs);
 
     while (true) {
         var pair = EnvPair.init(allocator);
@@ -361,7 +357,7 @@ pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayLis
         }
 
         // Free failed pair
-        pair.deinit(allocator);
+        pair.deinit();
 
         if (result == ReadResult.comment_encountered or result == ReadResult.fail) {
             continue;
@@ -393,7 +389,7 @@ test "readKey simple key" {
     var stream = EnvStream.init("KEY=value");
 
     var key = EnvKey.init(testing.allocator);
-    defer key.deinit(testing.allocator);
+    defer key.deinit();
 
     const result = try readKey(&stream, &key);
 
@@ -405,7 +401,7 @@ test "readKey leading spaces" {
     var stream = EnvStream.init("  SPACED_KEY=value");
 
     var key = EnvKey.init(testing.allocator);
-    defer key.deinit(testing.allocator);
+    defer key.deinit();
 
     const result = try readKey(&stream, &key);
 
@@ -417,7 +413,7 @@ test "readKey internal spaces" {
     var stream = EnvStream.init("my key=value");
 
     var key = EnvKey.init(testing.allocator);
-    defer key.deinit(testing.allocator);
+    defer key.deinit();
 
     const result = try readKey(&stream, &key);
 
@@ -429,7 +425,7 @@ test "readKey comment line" {
     var stream = EnvStream.init("#comment\nnext");
 
     var key = EnvKey.init(testing.allocator);
-    defer key.deinit(testing.allocator);
+    defer key.deinit();
 
     const result = try readKey(&stream, &key);
 
@@ -445,7 +441,7 @@ test "readKey invalid key" {
     var stream = EnvStream.init("INVALID\n");
 
     var key = EnvKey.init(testing.allocator);
-    defer key.deinit(testing.allocator);
+    defer key.deinit();
 
     const result = try readKey(&stream, &key);
 
@@ -456,7 +452,7 @@ test "readKey windows line endings" {
     var stream = EnvStream.init("KEY\r=value");
 
     var key = EnvKey.init(testing.allocator);
-    defer key.deinit(testing.allocator);
+    defer key.deinit();
 
     const result = try readKey(&stream, &key);
     try testing.expectEqual(ReadResult.success, result);
@@ -467,7 +463,7 @@ test "readKey EOF during key" {
     var stream = EnvStream.init("INCOMPLETE");
 
     var key = EnvKey.init(testing.allocator);
-    defer key.deinit(testing.allocator);
+    defer key.deinit();
 
     const result = try readKey(&stream, &key);
 
@@ -477,7 +473,7 @@ test "readKey EOF during key" {
 
 test "readNextChar basic" {
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     // 'a'
     const cont = try readNextChar(testing.allocator, &val, 'a');
@@ -487,7 +483,7 @@ test "readNextChar basic" {
 
 test "readNextChar implicit double quote" {
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     // First char 'a' -> implicit double quote
     _ = try readNextChar(testing.allocator, &val, 'a');
@@ -497,7 +493,7 @@ test "readNextChar implicit double quote" {
 
 test "readNextChar backtick" {
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     // `
     _ = try readNextChar(testing.allocator, &val, '`');
@@ -508,7 +504,7 @@ test "readNextChar backtick" {
 
 test "readNextChar comment" {
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     // #
     const cont = try readNextChar(testing.allocator, &val, '#');
@@ -517,7 +513,7 @@ test "readNextChar comment" {
 
 test "readNextChar quotes" {
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     // '
     _ = try readNextChar(testing.allocator, &val, '\'');
@@ -536,7 +532,7 @@ test "readNextChar quotes" {
 
 test "readNextChar double quotes" {
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     // "
     _ = try readNextChar(testing.allocator, &val, '"');
@@ -553,7 +549,7 @@ test "readNextChar double quotes" {
 
 test "readNextChar escape" {
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     // \
     _ = try readNextChar(testing.allocator, &val, '\\');
@@ -569,7 +565,7 @@ test "readNextChar escape" {
 
 test "readNextChar interpolation" {
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     // IMPLICIT quotes because start with non-quote
     // a
@@ -600,7 +596,7 @@ test "readValue simple value" {
     var stream = EnvStream.init("simple");
 
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     const result = try readValue(testing.allocator, &stream, &val);
 
@@ -612,7 +608,7 @@ test "readValue quoted value" {
     var stream = EnvStream.init("\"quoted value\"");
 
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     const result = try readValue(testing.allocator, &stream, &val);
 
@@ -624,7 +620,7 @@ test "readValue with escape" {
     var stream = EnvStream.init("test\\nvalue");
 
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     const result = try readValue(testing.allocator, &stream, &val);
 
@@ -636,7 +632,7 @@ test "readValue implicit double quote trimming" {
     var stream = EnvStream.init("value  ");
 
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     const result = try readValue(testing.allocator, &stream, &val);
 
@@ -650,7 +646,7 @@ test "readValue with interpolation" {
     var stream = EnvStream.init("a${b}c");
 
     var val = EnvValue.init(testing.allocator);
-    defer val.deinit(testing.allocator);
+    defer val.deinit();
 
     const result = try readValue(testing.allocator, &stream, &val);
 
@@ -663,7 +659,7 @@ test "readPair simple pair" {
     var stream = EnvStream.init("KEY=value");
 
     var pair = EnvPair.init(testing.allocator);
-    defer pair.deinit(testing.allocator);
+    defer pair.deinit();
 
     const result = try readPair(testing.allocator, &stream, &pair);
 
@@ -676,7 +672,7 @@ test "readPair with whitespace" {
     var stream = EnvStream.init("  KEY  =  value  ");
 
     var pair = EnvPair.init(testing.allocator);
-    defer pair.deinit(testing.allocator);
+    defer pair.deinit();
 
     const result = try readPair(testing.allocator, &stream, &pair);
 
@@ -689,7 +685,7 @@ test "readPair with quotes" {
     var stream = EnvStream.init("KEY=\"quoted value\"");
 
     var pair = EnvPair.init(testing.allocator);
-    defer pair.deinit(testing.allocator);
+    defer pair.deinit();
 
     const result = try readPair(testing.allocator, &stream, &pair);
 
@@ -701,7 +697,7 @@ test "readPair comment line" {
     var stream = EnvStream.init("#comment\nKEY=value");
 
     var pair = EnvPair.init(testing.allocator);
-    defer pair.deinit(testing.allocator);
+    defer pair.deinit();
 
     const result = try readPair(testing.allocator, &stream, &pair);
 
@@ -715,7 +711,7 @@ test "readPairs multiple pairs" {
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
         for (pairs.items) |*pair| {
-            pair.deinit(testing.allocator);
+            pair.deinit();
         }
         pairs.deinit();
     }
@@ -735,7 +731,7 @@ test "readPairs with comments" {
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
         for (pairs.items) |*pair| {
-            pair.deinit(testing.allocator);
+            pair.deinit();
         }
         pairs.deinit();
     }
@@ -751,7 +747,7 @@ test "readPairs with empty lines" {
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
         for (pairs.items) |*pair| {
-            pair.deinit(testing.allocator);
+            pair.deinit();
         }
         pairs.deinit();
     }
@@ -766,7 +762,7 @@ test "readPairs windows line endings" {
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
         for (pairs.items) |*pair| {
-            pair.deinit(testing.allocator);
+            pair.deinit();
         }
         pairs.deinit();
     }
@@ -782,7 +778,7 @@ test "readPairs empty stream" {
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
         for (pairs.items) |*pair| {
-            pair.deinit(testing.allocator);
+            pair.deinit();
         }
         pairs.deinit();
     }

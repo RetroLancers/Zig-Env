@@ -13,32 +13,32 @@ pub const EnvPair = struct {
         };
     }
 
-    pub fn deinit(self: *EnvPair, allocator: std.mem.Allocator) void {
-        self.key.deinit(allocator);
-        self.value.deinit(allocator);
+    pub fn deinit(self: *EnvPair) void {
+        self.key.deinit();
+        self.value.deinit();
     }
 };
 
 test "EnvPair initialization and lifecycle" {
     const allocator = std.testing.allocator;
     var pair = EnvPair.init(allocator);
-    defer pair.deinit(allocator);
+    defer pair.deinit();
 
     // Verify key init
     try std.testing.expectEqualStrings("", pair.key.key);
-    
+
     // Verify value init
     try std.testing.expectEqualStrings("", pair.value.value);
-    
+
     // Modify and check cleanup
     const kbuf = try allocator.alloc(u8, 3);
     @memcpy(kbuf, "key");
-    pair.key.setOwnBuffer(allocator, kbuf);
-    
+    pair.key.setOwnBuffer(kbuf);
+
     const vbuf = try allocator.alloc(u8, 5);
     @memcpy(vbuf, "value");
-    pair.value.setOwnBuffer(allocator, vbuf);
-    
+    pair.value.setOwnBuffer(vbuf);
+
     try std.testing.expectEqualStrings("key", pair.key.key);
     try std.testing.expectEqualStrings("value", pair.value.value);
 }

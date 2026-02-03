@@ -76,7 +76,7 @@ pub fn processPossibleControlCharacter(value: *EnvValue, char: u8) !bool {
 test "walkBackSlashes - paired backslashes" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     // 4 backslashes -> 2 output, 0 remainder
     val.back_slash_streak = 4;
@@ -98,7 +98,7 @@ test "walkBackSlashes - paired backslashes" {
 test "walkBackSlashes - odd backslashes" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     // 3 backslashes -> 1 output, 1 remainder
     val.back_slash_streak = 3;
@@ -120,7 +120,7 @@ test "walkBackSlashes - odd backslashes" {
 test "walkBackSlashes - zero backslashes" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     val.back_slash_streak = 0;
     try walkBackSlashes(&val);
@@ -131,25 +131,29 @@ test "walkBackSlashes - zero backslashes" {
 test "processPossibleControlCharacter - known escapes" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     _ = try processPossibleControlCharacter(&val, 'n');
     try std.testing.expectEqualStrings("\n", val.value);
-    
-    val.buffer.clearRetainingCapacity(); val.value_index = 0;
+
+    val.buffer.clearRetainingCapacity();
+    val.value_index = 0;
     _ = try processPossibleControlCharacter(&val, 't');
     try std.testing.expectEqualStrings("\t", val.value);
 
-    val.buffer.clearRetainingCapacity(); val.value_index = 0;
+    val.buffer.clearRetainingCapacity();
+    val.value_index = 0;
     _ = try processPossibleControlCharacter(&val, 'r');
     try std.testing.expectEqualStrings("\r", val.value);
 
-    val.buffer.clearRetainingCapacity(); val.value_index = 0;
+    val.buffer.clearRetainingCapacity();
+    val.value_index = 0;
     _ = try processPossibleControlCharacter(&val, 'b');
     try std.testing.expectEqualStrings("\x08", val.value);
 
     // Test quote escaping
-    val.buffer.clearRetainingCapacity(); val.value_index = 0;
+    val.buffer.clearRetainingCapacity();
+    val.value_index = 0;
     _ = try processPossibleControlCharacter(&val, '"');
     try std.testing.expectEqualStrings("\"", val.value);
 }
@@ -157,7 +161,7 @@ test "processPossibleControlCharacter - known escapes" {
 test "processPossibleControlCharacter - unknown escapes" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     // \z -> \z
     const processed = try processPossibleControlCharacter(&val, 'z');
@@ -169,12 +173,12 @@ test "processPossibleControlCharacter - unknown escapes" {
 test "full flow simulation" {
     const allocator = std.testing.allocator;
     var val = EnvValue.init(allocator);
-    defer val.deinit(allocator);
+    defer val.deinit();
 
     // Simulation of: "a\nb\\c"
     // 1. 'a' literal
     try addToBuffer(&val, 'a');
-    
+
     // 2. '\' detected
     val.back_slash_streak = 1;
 

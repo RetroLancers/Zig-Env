@@ -89,7 +89,7 @@ fn replaceInterpolation(allocator: std.mem.Allocator, pair: *EnvPair, interp_idx
     @memcpy(new_buffer[prefix.len + replacement.len ..], suffix);
 
     // Update the value's buffer
-    pair.value.setOwnBuffer(value_allocator, new_buffer);
+    pair.value.setOwnBuffer(new_buffer);
 
     // We don't need to update other interpolation positions because we process in reverse.
     // However, we should probably remove the interpolation we just processed.
@@ -103,7 +103,7 @@ test "finalizeValue - basic substitution" {
     const allocator = std.testing.allocator;
     var pairs = std.ArrayList(EnvPair).init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit(allocator);
+        for (pairs.items) |*p| p.deinit();
         pairs.deinit();
     }
 
@@ -129,7 +129,7 @@ test "finalizeValue - recursive substitution" {
     const allocator = std.testing.allocator;
     var pairs = std.ArrayList(EnvPair).init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit(allocator);
+        for (pairs.items) |*p| p.deinit();
         pairs.deinit();
     }
 
@@ -167,7 +167,7 @@ test "finalizeValue - circular dependency" {
     const allocator = std.testing.allocator;
     var pairs = std.ArrayList(EnvPair).init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit(allocator);
+        for (pairs.items) |*p| p.deinit();
         pairs.deinit();
     }
 
@@ -199,7 +199,7 @@ test "finalizeValue - missing variable" {
     const allocator = std.testing.allocator;
     var pairs = std.ArrayList(EnvPair).init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit(allocator);
+        for (pairs.items) |*p| p.deinit();
         pairs.deinit();
     }
 
@@ -220,7 +220,7 @@ test "finalizeValue - multiple interpolations in reverse order" {
     const allocator = std.testing.allocator;
     var pairs = std.ArrayList(EnvPair).init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit(allocator);
+        for (pairs.items) |*p| p.deinit();
         pairs.deinit();
     }
 
@@ -254,7 +254,7 @@ test "finalizeValue - indirect circular dependency" {
     const allocator = std.testing.allocator;
     var pairs = std.ArrayList(EnvPair).init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit(allocator);
+        for (pairs.items) |*p| p.deinit();
         pairs.deinit();
     }
 
@@ -294,7 +294,7 @@ test "finalizeValue - same variable twice" {
     const allocator = std.testing.allocator;
     var pairs = std.ArrayList(EnvPair).init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit(allocator);
+        for (pairs.items) |*p| p.deinit();
         pairs.deinit();
     }
 
