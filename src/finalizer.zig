@@ -96,7 +96,8 @@ fn replaceInterpolation(allocator: std.mem.Allocator, pair: *EnvPair, interp_idx
     // The C++ version might handle this differently, but since we are done with this one,
     // and we process in reverse, it's fine to leave it or remove it.
     // Actually, if we remove it, the index 'i' in finalizeValue loop will still be correct because it's decreasing.
-    _ = pair.value.interpolations.orderedRemove(interp_idx);
+    var removed = pair.value.interpolations.orderedRemove(interp_idx);
+    removed.deinit();
 }
 
 test "finalizeValue - basic substitution" {

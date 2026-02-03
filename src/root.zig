@@ -17,6 +17,14 @@ pub const interpolation = @import("interpolation.zig");
 pub const finalizer = @import("finalizer.zig");
 pub const reader = @import("reader.zig");
 pub const memory = @import("memory.zig");
+pub const lib = @import("lib.zig");
+
+// Public API
+pub const Env = lib.Env;
+pub const parse = lib.parse;
+pub const parseFile = lib.parseFile;
+pub const parseString = lib.parseString;
+pub const parseReader = lib.parseReader;
 
 test {
     _ = @import("env_stream.zig");
@@ -33,4 +41,5 @@ test {
     _ = @import("finalizer.zig");
     _ = @import("reader.zig");
     _ = @import("memory.zig");
+    _ = @import("lib.zig");
 }

@@ -7,6 +7,7 @@
         "src/env_key.zig",
         "src/env_value.zig",
         "src/env_pair.zig",
-        "src/variable_position.zig"
+        "src/variable_position.zig",
+        "src/lib.zig"
     ]
 }

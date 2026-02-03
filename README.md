@@ -46,7 +46,7 @@ See [`cppnv_mindmap.md`](./cppnv_mindmap.md) for the detailed conversion bluepri
 - ✅ **Phase 5: Core Reading** - `read_key`, `read_value`, `read_pair`, and character state machine
 - ✅ **Phase 6: Finalization** - Recursive interpolation resolution and circular dependency detection
 - ✅ **Phase 7: Memory Management** - Explicit deallocation, leak prevention, and `deinit` patterns
-- ⏳ **Phase 8: File I/O & Public API** - Integration with `std.fs` and high-level interface
+- ✅ **Phase 8: File I/O & Public API** - Integration with `std.fs` and high-level interface
 - 🔄 **Phase 9: Testing** - Porting 108 test cases (most core logic tests already ported)
 
 ## Usage (Planned)
@@ -61,11 +61,11 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     // Parse from file
-    const env_pairs = try dotenv.parseFile(allocator, ".env");
-    defer env_pairs.deinit();
+    var env = try dotenv.parseFile(allocator, ".env");
+    defer env.deinit();
 
     // Access values
-    if (env_pairs.get("api_key")) |value| {
+    if (env.get("api_key")) |value| {
         std.debug.print("API Key: {s}\n", .{value});
     }
 }
