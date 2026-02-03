@@ -1,11 +1,15 @@
-[
-    "src/reader.zig",
-    "src/parser_options.zig",
-    "Tasks/05b_Character_Reading_State_Machine.md",
-    "src/env_value.zig",
-    "src/buffer_utils.zig",
-    "src/escape_processor.zig",
-    "src/quote_parser.zig",
-    "src/interpolation.zig",
-    "src/reusable_buffer.zig"
-]
+{
+    "name": "character-reading",
+    "description": "Lower-level character reading and escaping logic.",
+    "files": [
+        "src/parser/read_next_char.zig",
+        "src/data/parser_options.zig",
+        "Tasks/completed/05b_Character_Reading_State_Machine.md",
+        "src/data/env_value.zig",
+        "src/buffer/buffer_utils.zig",
+        "src/parser/escape_processor.zig",
+        "src/parser/quote_parser.zig",
+        "src/interpolation/interpolation.zig",
+        "src/buffer/reusable_buffer.zig"
+    ]
+}

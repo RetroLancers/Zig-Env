@@ -128,7 +128,9 @@ test "Env methods" {
     defer env.deinit();
 
     const key = try allocator.dupe(u8, "K");
+    defer allocator.free(key);
     const val = try allocator.dupe(u8, "V");
+    defer allocator.free(val);
 
     try env.put(key, val);
 

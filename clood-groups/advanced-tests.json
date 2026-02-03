@@ -1,9 +1,10 @@
 {
-    "name": "Advanced Tests",
+    "name": "advanced-tests",
+    "description": "More complex test cases including interpolation and heredocs.",
     "files": [
         "Tasks/completed/09b_Port_Advanced_Tests.md",
-        "test/interpolation.zig",
-        "test/heredoc.zig",
-        "test/edge_cases.zig"
+        "tests/interpolation_test.zig",
+        "tests/heredoc_test.zig",
+        "tests/edge_cases.zig"
     ]
 }

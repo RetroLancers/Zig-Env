@@ -8,6 +8,6 @@
         "src/lib.zig",
         "src/data/env_value.zig",
         "benchmarks/allocation_benchmark.zig",
-        "Tasks/in_progress/22_replace_arraylist_usage.md"
+        "Tasks/completed/22_replace_arraylist_usage.md"
     ]
 }

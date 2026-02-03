@@ -1,9 +1,10 @@
 {
-    "name": "Public API",
-    "description": "Main entry points and public interfaces for the library",
+    "name": "public-api",
+    "description": "High-level entry points for library consumption",
     "files": [
         "src/lib.zig",
         "src/root.zig",
-        "src/parser_options.zig"
+        "src/data/parser_options.zig",
+        "src/data/read_result.zig"
     ]
 }

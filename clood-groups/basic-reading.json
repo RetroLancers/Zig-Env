@@ -1,8 +1,15 @@
-[
-    "src/reader.zig",
-    "src/reusable_buffer.zig",
-    "src/env_stream.zig",
-    "src/env_key.zig",
-    "src/result_enums.zig",
-    "Tasks/in_progress/20_windows_carriage_return_handling.md"
-]
+{
+    "name": "basic-reading",
+    "description": "Tasks and files related to basic .env reading and parsing.",
+    "files": [
+        "src/parser/read_next_char.zig",
+        "src/parser/read_key.zig",
+        "src/parser/read_value.zig",
+        "src/parser/read_pair.zig",
+        "src/buffer/reusable_buffer.zig",
+        "src/parser/env_stream.zig",
+        "src/data/env_key.zig",
+        "src/data/read_result.zig",
+        "Tasks/completed/20_windows_carriage_return_handling.md"
+    ]
+}

@@ -2,10 +2,11 @@
     "name": "garbage-tests",
     "description": "Tests for handling trailing content after quotes in .env files",
     "files": [
-        "test/garbage_after_quote.zig",
+        "tests/garbage_after_quote.zig",
         "build.zig",
-        "src/reader.zig",
-        "src/quote_parser.zig",
+        "src/parser/read_value.zig",
+        "src/parser/read_pair.zig",
+        "src/parser/quote_parser.zig",
         "src/lib.zig"
     ]
 }

@@ -4,11 +4,11 @@
     "files": [
         "benchmarks/allocation_benchmark.zig",
         "docs/Performance.md",
-        "src/file_scanner.zig",
-        "src/reusable_buffer.zig",
-        "src/reader.zig",
+        "src/parser/file_scanner.zig",
+        "src/buffer/reusable_buffer.zig",
+        "src/parser/read_pair.zig",
         "src/lib.zig",
         "build.zig",
-        "Tasks/in_progress/17_benchmark_allocation_optimization.md"
+        "Tasks/completed/17_benchmark_allocation_optimization.md"
     ]
 }

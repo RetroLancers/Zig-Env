@@ -2,12 +2,12 @@
     "name": "performance-optimization",
     "description": "Optimizations for memory allocation and parsing speed",
     "files": [
-        "src/file_scanner.zig",
-        "src/env_key.zig",
-        "src/env_value.zig",
-        "src/env_pair.zig",
-        "src/reusable_buffer.zig",
-        "src/reader.zig",
+        "src/parser/file_scanner.zig",
+        "src/data/env_key.zig",
+        "src/data/env_value.zig",
+        "src/data/env_pair.zig",
+        "src/buffer/reusable_buffer.zig",
+        "src/parser/read_pair.zig",
         "benchmarks/allocation_benchmark.zig",
         "docs/Performance.md",
         "Tasks/completed/18_prescanner_pair_count_estimation.md"

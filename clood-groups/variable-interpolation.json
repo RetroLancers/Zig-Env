@@ -1,12 +1,16 @@
-[
-    "src/interpolation.zig",
-    "src/variable_position.zig",
-    "src/whitespace_utils.zig",
-    "src/finalizer.zig",
-    "src/env_value.zig",
-    "src/reader.zig",
-    "src/parser_options.zig",
-    "tests/braceless_variable_test.zig",
-    "Tasks/completed/06_Interpolation_Finalization.md",
-    "Tasks/completed/13_migrate_remaining_arraylist_usage.md"
-]
+{
+    "name": "variable-interpolation",
+    "description": "Logic for substituting environment variables within values",
+    "files": [
+        "src/interpolation/interpolation.zig",
+        "src/data/variable_position.zig",
+        "src/utils/whitespace_utils.zig",
+        "src/interpolation/finalizer.zig",
+        "src/data/env_value.zig",
+        "src/parser/read_value.zig",
+        "src/data/parser_options.zig",
+        "tests/braceless_variable_test.zig",
+        "Tasks/completed/06_Interpolation_Finalization.md",
+        "Tasks/completed/13_migrate_remaining_arraylist_usage.md"
+    ]
+}

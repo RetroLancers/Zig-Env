@@ -1,19 +1,25 @@
-[
-    "src/reader.zig",
-    "src/parser_options.zig",
-    "src/reusable_buffer.zig",
-    "src/env_stream.zig",
-    "src/env_key.zig",
-    "src/env_value.zig",
-    "src/env_pair.zig",
-    "src/result_enums.zig",
-    "src/buffer_utils.zig",
-    "src/escape_processor.zig",
-    "src/quote_parser.zig",
-    "src/interpolation.zig",
-    "src/variable_position.zig",
-    "Tasks/05c_Value_Pair_Reading.md",
-    "Tasks/completed/12_migrate_envvalue_to_reusable_buffer.md",
-    "Tasks/completed/13_migrate_remaining_arraylist_usage.md",
-    "cppnv/cppnv/node_dotenv.cc"
-]
+{
+    "name": "value-pair-reading",
+    "description": "High-level parsing of key-value pairs in .env files",
+    "files": [
+        "src/parser/read_key.zig",
+        "src/parser/read_value.zig",
+        "src/parser/read_pair.zig",
+        "src/data/parser_options.zig",
+        "src/buffer/reusable_buffer.zig",
+        "src/parser/env_stream.zig",
+        "src/data/env_key.zig",
+        "src/data/env_value.zig",
+        "src/data/env_pair.zig",
+        "src/data/read_result.zig",
+        "src/buffer/buffer_utils.zig",
+        "src/parser/escape_processor.zig",
+        "src/parser/quote_parser.zig",
+        "src/interpolation/interpolation.zig",
+        "src/data/variable_position.zig",
+        "Tasks/completed/05c_Value_Pair_Reading.md",
+        "Tasks/completed/12_migrate_envvalue_to_reusable_buffer.md",
+        "Tasks/completed/13_migrate_remaining_arraylist_usage.md",
+        "cppnv/cppnv/node_dotenv.cc"
+    ]
+}

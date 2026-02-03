@@ -2,12 +2,12 @@
     "name": "Quote Processing",
     "description": "Files related to parsing and processing quotes in .env files",
     "files": [
-        "src/quote_parser.zig",
-        "src/env_value.zig",
-        "src/buffer_utils.zig",
-        "src/parser_options.zig",
+        "src/parser/quote_parser.zig",
+        "src/data/env_value.zig",
+        "src/buffer/buffer_utils.zig",
+        "src/data/parser_options.zig",
         "tests/quote_test.zig",
         "tests/single_quote_heredoc_test.zig",
-        "Tasks/in_progress/18_single_quoted_heredocs.md"
+        "Tasks/completed/18_single_quoted_heredocs.md"
     ]
 }
