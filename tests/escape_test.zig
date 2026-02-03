@@ -1,6 +1,6 @@
 const std = @import("std");
 const testing = std.testing;
-const parser = @import("Zig_Env_lib");
+const parser = @import("zigenv");
 
 test "control codes - ControlCodes" {
     const allocator = testing.allocator;

@@ -1,6 +1,6 @@
 const std = @import("std");
 const testing = std.testing;
-const parser = @import("Zig_Env_lib");
+const parser = @import("zigenv");
 
 test "triple single quoted with garbage - TripleSingleQuotedWithMoreGarbage" {
     const allocator = testing.allocator;

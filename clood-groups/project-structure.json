@@ -1,0 +1,11 @@
+{
+    "name": "Project Structure",
+    "description": "Foundation files for the Zig project including build configuration and main exports.",
+    "files": [
+        "build.zig",
+        "build.zig.zon",
+        "README.md",
+        "src/root.zig",
+        "src/lib.zig"
+    ]
+}

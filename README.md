@@ -53,7 +53,7 @@ See [`cppnv_mindmap.md`](./cppnv_mindmap.md) for the detailed conversion bluepri
 
 ```zig
 const std = @import("std");
-const dotenv = @import("Zig_Env_lib");
+const zigenv = @import("zigenv");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -61,7 +61,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     // Parse from file
-    var env = try dotenv.parseFile(allocator, ".env");
+    var env = try zigenv.parseFile(allocator, ".env");
     defer env.deinit();
 
     // Access values
@@ -76,33 +76,48 @@ pub fn main() !void {
 This project uses the Zig build system:
 
 ```bash
-# Build the library and executable
+# Build the library
 zig build
-
-# Run the executable
-zig build run
 
 # Run tests
 zig build test
+
+# Generate documentation
+zig build docs
 ```
 
 ## Project Structure
 
 ```
 Zig-Env/
+├── build.zig              # Build configuration
+├── build.zig.zon          # Package dependencies
+├── README.md              # Project documentation
 ├── src/
-│   ├── main.zig          # Executable entry point
-│   └── root.zig          # Library entry point
-├── cppnv/                # Original C++ implementation (reference)
-├── Tasks/                # Task management
-│   ├── in_progress/      # Current tasks
-│   ├── completed/        # Finished tasks
-│   └── Notes/            # General notes
-├── clood-groups/         # Code domain tracking (JSON files)
-├── build.zig             # Build configuration
-├── build.zig.zon         # Dependencies
-├── cppnv_mindmap.md      # Detailed conversion blueprint
-└── README.md             # This file
+│   ├── root.zig           # Main module export
+│   ├── lib.zig            # Public API
+│   ├── env_stream.zig     # EnvStream struct
+│   ├── env_key.zig        # EnvKey struct
+│   ├── env_value.zig      # EnvValue struct
+│   ├── env_pair.zig       # EnvPair struct
+│   ├── variable_position.zig
+│   ├── result_enums.zig
+│   ├── buffer_utils.zig
+│   ├── whitespace_utils.zig
+│   ├── quote_parser.zig
+│   ├── interpolation.zig
+│   ├── reader.zig
+│   ├── finalizer.zig
+│   └── memory.zig
+├── tests/
+│   ├── basic_test.zig
+│   ├── quote_test.zig
+│   ├── heredoc_test.zig
+│   ├── escape_test.zig
+│   └── interpolation_test.zig
+├── Tasks/                 # Task management
+├── clood-groups/          # Code domain tracking
+└── cppnv/                 # Original C++ reference
 ```
 
 ## Development Workflow

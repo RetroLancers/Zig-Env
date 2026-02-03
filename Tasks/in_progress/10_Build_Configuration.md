@@ -102,16 +102,16 @@ test {
 
 ## Checklist
 
-- [ ] Update `build.zig` with library and test targets
-- [ ] Create `src/root.zig` main export file
-- [ ] Ensure one struct/function per file policy
-- [ ] Configure documentation generation
-- [ ] Add `zig build` commands:
-  - [ ] `zig build` - build library
-  - [ ] `zig build test` - run tests
-  - [ ] `zig build docs` - generate docs
-- [ ] Update README with usage examples
-- [ ] Create initial clood-group for project structure
+- [x] Update `build.zig` with library and test targets
+- [x] Create `src/root.zig` main export file
+- [x] Ensure one struct/function per file policy
+- [x] Configure documentation generation
+- [x] Add `zig build` commands:
+  - [x] `zig build` - build library
+  - [x] `zig build test` - run tests
+  - [x] `zig build docs` - generate docs
+- [x] Update README with usage examples
+- [x] Create initial clood-group for project structure
 
 ## Dependencies
 - All previous tasks completed
