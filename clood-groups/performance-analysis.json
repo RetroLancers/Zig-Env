@@ -1,0 +1,10 @@
+{
+    "name": "performance-analysis",
+    "description": "Performance analysis reports and tools",
+    "files": [
+        "benchmarks/framework.zig",
+        "benchmarks/micro_benchmarks.zig",
+        "docs/Benchmarking.md",
+        "docs/Performance.md"
+    ]
+}

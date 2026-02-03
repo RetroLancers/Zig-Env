@@ -101,4 +101,35 @@ pub fn build(b: *std.Build) void {
     });
     const run_benchmark_tests = b.addRunArtifact(benchmark_test);
     test_step.dependOn(&run_benchmark_tests.step);
+
+    // --- Advanced Benchmarking Suite ---
+
+    // Common bench step
+    const bench_step = b.step("bench", "Run all benchmarks");
+    // Add existing legacy benchmark
+    bench_step.dependOn(&benchmark_cmd.step);
+
+    // Micro Benchmarks
+    const micro_bench_mod = b.createModule(.{
+        .root_source_file = b.path("benchmarks/micro_benchmarks.zig"),
+        .target = target,
+        .optimize = .ReleaseFast,
+    });
+    micro_bench_mod.addImport("zigenv", zigenv_mod);
+
+    const micro_bench_exe = b.addExecutable(.{
+        .name = "micro_benchmarks",
+        .root_module = micro_bench_mod,
+    });
+
+    b.installArtifact(micro_bench_exe);
+
+    const run_micro_bench = b.addRunArtifact(micro_bench_exe);
+    if (b.args) |args| {
+        run_micro_bench.addArgs(args);
+    }
+
+    const bench_micro_step = b.step("bench:micro", "Run micro-benchmarks");
+    bench_micro_step.dependOn(&run_micro_bench.step);
+    bench_step.dependOn(&run_micro_bench.step);
 }

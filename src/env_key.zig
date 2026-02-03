@@ -15,6 +15,12 @@ pub const EnvKey = struct {
         };
     }
 
+    pub fn clear(self: *EnvKey) void {
+        self.buffer.clearRetainingCapacity();
+        self.key = "";
+        self.key_index = 0;
+    }
+
     pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !EnvKey {
         return EnvKey{
             .key = "",

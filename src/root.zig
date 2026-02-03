@@ -19,6 +19,7 @@ pub const parseString = @import("lib.zig").parseString;
 pub const parseStringWithOptions = @import("lib.zig").parseStringWithOptions;
 pub const parseReader = @import("lib.zig").parseReader;
 pub const parseReaderWithOptions = @import("lib.zig").parseReaderWithOptions;
+pub const reader = @import("reader.zig");
 pub const Env = @import("lib.zig").Env;
 
 // Tests

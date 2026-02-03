@@ -62,6 +62,36 @@ pub const EnvValue = struct {
         };
     }
 
+    pub fn clear(self: *EnvValue) void {
+        self.value = "";
+        for (self.interpolations.items) |*item| {
+            item.deinit();
+        }
+        self.interpolations.clearRetainingCapacity();
+
+        self.is_parsing_variable = false;
+        self.is_parsing_braceless_variable = false;
+        self.interpolation_index = 0;
+
+        self.quoted = false;
+        self.double_quoted = false;
+        self.backtick_quoted = false;
+        self.triple_quoted = false;
+        self.triple_double_quoted = false;
+        self.implicit_double_quote = false;
+
+        self.single_quote_streak = 0;
+        self.double_quote_streak = 0;
+        self.back_slash_streak = 0;
+
+        self.is_being_interpolated = false;
+        self.is_already_interpolated = false;
+
+        self.buffer.clearRetainingCapacity();
+        self.value_index = 0;
+        self.escaped_dollar_index = null;
+    }
+
     pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !EnvValue {
         var value = init(allocator);
         value.buffer.deinit();

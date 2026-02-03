@@ -1,0 +1,8 @@
+{
+    "name": "statistics",
+    "description": "Statistical analysis utilities for benchmarking",
+    "files": [
+        "benchmarks/statistics.zig",
+        "benchmarks/framework.zig"
+    ]
+}
