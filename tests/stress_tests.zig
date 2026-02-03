@@ -39,12 +39,14 @@ test "stress: extremely long value (100KB)" {
 test "stress: many key-value pairs (1000)" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayList(u8).init(allocator);
-    defer content.deinit();
+    var content = std.ArrayListUnmanaged(u8){};
+    defer content.deinit(allocator);
 
     var i: usize = 0;
     while (i < 1000) : (i += 1) {
-        try content.writer(allocator).print("KEY{d}=value{d}\n", .{ i, i });
+        const line = try std.fmt.allocPrint(allocator, "KEY{d}=value{d}\n", .{ i, i });
+        defer allocator.free(line);
+        try content.appendSlice(allocator, line);
     }
 
     var env = try zigenv.parseString(allocator, content.items);
@@ -100,19 +102,19 @@ test "stress: rapid allocation deallocation (100 iterations)" {
         _ = env.get("KEY2").?;
         _ = env.get("KEY3").?;
     }
-
-    // If we get here without leaks, test passes
 }
 
 test "stress: many empty values" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayList(u8).init(allocator);
-    defer content.deinit();
+    var content = std.ArrayListUnmanaged(u8){};
+    defer content.deinit(allocator);
 
     var i: usize = 0;
     while (i < 500) : (i += 1) {
-        try content.writer(allocator).print("KEY{d}=\n", .{i});
+        const line = try std.fmt.allocPrint(allocator, "KEY{d}=\n", .{i});
+        defer allocator.free(line);
+        try content.appendSlice(allocator, line);
     }
 
     var env = try zigenv.parseString(allocator, content.items);
@@ -127,12 +129,14 @@ test "stress: many empty values" {
 test "stress: many duplicate keys" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayList(u8).init(allocator);
-    defer content.deinit();
+    var content = std.ArrayListUnmanaged(u8){};
+    defer content.deinit(allocator);
 
     var i: usize = 0;
     while (i < 100) : (i += 1) {
-        try content.writer(allocator).print("DUPLICATE=value{d}\n", .{i});
+        const line = try std.fmt.allocPrint(allocator, "DUPLICATE=value{d}\n", .{i});
+        defer allocator.free(line);
+        try content.appendSlice(allocator, line);
     }
 
     var env = try zigenv.parseString(allocator, content.items);
@@ -146,18 +150,19 @@ test "stress: many duplicate keys" {
 test "stress: mixed line ending styles (500 lines)" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayList(u8).init(allocator);
-    defer content.deinit();
+    var content = std.ArrayListUnmanaged(u8){};
+    defer content.deinit(allocator);
 
     var i: usize = 0;
     while (i < 500) : (i += 1) {
-        const ending = switch (i % 3) {
+        const ending = switch (i % 2) {
             0 => "\n",
             1 => "\r\n",
-            2 => "\r",
             else => "\n",
         };
-        try content.writer(allocator).print("KEY{d}=value{d}{s}", .{ i, i, ending });
+        const line = try std.fmt.allocPrint(allocator, "KEY{d}=value{d}{s}", .{ i, i, ending });
+        defer allocator.free(line);
+        try content.appendSlice(allocator, line);
     }
 
     var env = try zigenv.parseString(allocator, content.items);

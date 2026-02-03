@@ -44,6 +44,11 @@ pub fn build(b: *std.Build) void {
         "tests/unicode_tests.zig",
         "tests/windows_tests.zig",
         "tests/stress_tests.zig",
+        "tests/fuzz_tests.zig",
+        "tests/property_tests.zig",
+        "tests/compatibility_tests.zig",
+        "tests/performance_regression_tests.zig",
+        "tests/error_messages_tests.zig",
     };
 
     for (test_files) |test_file| {

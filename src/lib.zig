@@ -40,7 +40,13 @@ pub const Env = struct {
 
     /// Internal helper to put owned strings into the map
     fn put(self: *Env, key: []const u8, value: []const u8) !void {
-        try self.map.put(key, value);
+        const gop = try self.map.getOrPut(key);
+        if (gop.found_existing) {
+            self.allocator.free(gop.key_ptr.*);
+            self.allocator.free(gop.value_ptr.*);
+            gop.key_ptr.* = key;
+        }
+        gop.value_ptr.* = value;
     }
 };
 
