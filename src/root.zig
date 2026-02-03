@@ -21,6 +21,22 @@ pub const parseStringWithOptions = @import("lib.zig").parseStringWithOptions;
 pub const parseReader = @import("lib.zig").parseReader;
 pub const parseReaderWithOptions = @import("lib.zig").parseReaderWithOptions;
 pub const Env = @import("data/env.zig").Env;
+pub const reader = struct {
+    pub const readKey = @import("parser/read_key.zig").readKey;
+    pub const readValue = @import("parser/read_value.zig").readValue;
+    pub const readPair = @import("parser/read_pair.zig").readPair;
+    pub const readPairs = @import("parser/read_pair.zig").readPairs;
+    pub const readPairsWithHints = @import("parser/read_pair.zig").readPairsWithHints;
+    pub const readPairsWithOptions = @import("parser/read_pair.zig").readPairsWithOptions;
+    pub const readNextChar = @import("parser/read_next_char.zig").readNextChar;
+};
+
+// Internal modules for benchmarking/testing
+pub const internal = struct {
+    pub const quote_parser = @import("parser/quote_parser.zig");
+    pub const escape_processor = @import("parser/escape_processor.zig");
+    pub const interpolation = @import("interpolation/interpolation.zig");
+};
 
 // Exporting sub-modules if needed, or just let them be internal.
 // Tests need to cover all files.

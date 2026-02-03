@@ -132,4 +132,99 @@ pub fn build(b: *std.Build) void {
     const bench_micro_step = b.step("bench:micro", "Run micro-benchmarks");
     bench_micro_step.dependOn(&run_micro_bench.step);
     bench_step.dependOn(&run_micro_bench.step);
+
+    // Throughput Benchmarks
+    const throughput_bench_mod = b.createModule(.{
+        .root_source_file = b.path("benchmarks/throughput_benchmarks.zig"),
+        .target = target,
+        .optimize = .ReleaseFast,
+    });
+    throughput_bench_mod.addImport("zigenv", zigenv_mod);
+
+    const throughput_bench_exe = b.addExecutable(.{
+        .name = "throughput_benchmarks",
+        .root_module = throughput_bench_mod,
+    });
+    b.installArtifact(throughput_bench_exe);
+
+    const run_throughput_bench = b.addRunArtifact(throughput_bench_exe);
+    const bench_throughput_step = b.step("bench:throughput", "Run throughput benchmarks");
+    bench_throughput_step.dependOn(&run_throughput_bench.step);
+    bench_step.dependOn(&run_throughput_bench.step);
+
+    // Latency Benchmarks
+    const latency_bench_mod = b.createModule(.{
+        .root_source_file = b.path("benchmarks/latency_benchmarks.zig"),
+        .target = target,
+        .optimize = .ReleaseFast,
+    });
+    latency_bench_mod.addImport("zigenv", zigenv_mod);
+
+    const latency_bench_exe = b.addExecutable(.{
+        .name = "latency_benchmarks",
+        .root_module = latency_bench_mod,
+    });
+    b.installArtifact(latency_bench_exe);
+
+    const run_latency_bench = b.addRunArtifact(latency_bench_exe);
+    const bench_latency_step = b.step("bench:latency", "Run latency benchmarks");
+    bench_latency_step.dependOn(&run_latency_bench.step);
+    bench_step.dependOn(&run_latency_bench.step);
+
+    // Memory Benchmarks
+    const memory_bench_mod = b.createModule(.{
+        .root_source_file = b.path("benchmarks/memory_benchmarks.zig"),
+        .target = target,
+        .optimize = .ReleaseFast,
+    });
+    memory_bench_mod.addImport("zigenv", zigenv_mod);
+
+    const memory_bench_exe = b.addExecutable(.{
+        .name = "memory_benchmarks",
+        .root_module = memory_bench_mod,
+    });
+    b.installArtifact(memory_bench_exe);
+
+    const run_memory_bench = b.addRunArtifact(memory_bench_exe);
+    const bench_memory_step = b.step("bench:memory", "Run memory benchmarks");
+    bench_memory_step.dependOn(&run_memory_bench.step);
+    bench_step.dependOn(&run_memory_bench.step);
+
+    // Scalability Benchmarks
+    const scalability_bench_mod = b.createModule(.{
+        .root_source_file = b.path("benchmarks/scalability_benchmarks.zig"),
+        .target = target,
+        .optimize = .ReleaseFast,
+    });
+    scalability_bench_mod.addImport("zigenv", zigenv_mod);
+
+    const scalability_bench_exe = b.addExecutable(.{
+        .name = "scalability_benchmarks",
+        .root_module = scalability_bench_mod,
+    });
+    b.installArtifact(scalability_bench_exe);
+
+    const run_scalability_bench = b.addRunArtifact(scalability_bench_exe);
+    const bench_scalability_step = b.step("bench:scalability", "Run scalability benchmarks");
+    bench_scalability_step.dependOn(&run_scalability_bench.step);
+    bench_step.dependOn(&run_scalability_bench.step);
+
+    // Scenario Benchmarks
+    const scenario_bench_mod = b.createModule(.{
+        .root_source_file = b.path("benchmarks/scenario_benchmarks.zig"),
+        .target = target,
+        .optimize = .ReleaseFast,
+    });
+    scenario_bench_mod.addImport("zigenv", zigenv_mod);
+
+    const scenario_bench_exe = b.addExecutable(.{
+        .name = "scenario_benchmarks",
+        .root_module = scenario_bench_mod,
+    });
+    b.installArtifact(scenario_bench_exe);
+
+    const run_scenario_bench = b.addRunArtifact(scenario_bench_exe);
+    const bench_scenario_step = b.step("bench:scenario", "Run scenario benchmarks");
+    bench_scenario_step.dependOn(&run_scenario_bench.step);
+    bench_step.dependOn(&run_scenario_bench.step);
 }

@@ -57,6 +57,8 @@ pub fn parseStringWithOptions(allocator: Allocator, content: []const u8, options
         errdefer allocator.free(value);
 
         try env.put(key, value);
+        allocator.free(key);
+        allocator.free(value);
     }
 
     // Clean up pair structures (interpolations, etc.) but buffers are already emptied by toOwnedSlice

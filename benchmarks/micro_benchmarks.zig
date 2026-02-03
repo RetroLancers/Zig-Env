@@ -88,16 +88,171 @@ pub fn benchmarkValueParsing(allocator: std.mem.Allocator) !framework.BenchmarkR
     );
 }
 
+// Quote Processing
+const QuoteParsingContext = struct {
+    value: zigenv.EnvValue,
+
+    pub fn init(allocator: std.mem.Allocator) QuoteParsingContext {
+        return QuoteParsingContext{
+            .value = zigenv.EnvValue.init(allocator),
+        };
+    }
+
+    pub fn deinit(self: *QuoteParsingContext) void {
+        self.value.deinit();
+    }
+};
+
+fn resetQuoteParsing(ctx: *QuoteParsingContext) void {
+    ctx.value.clear();
+    ctx.value.single_quote_streak = 1;
+}
+
+fn runQuoteParsing(ctx: *QuoteParsingContext, _: std.mem.Allocator) !void {
+    _ = try zigenv.internal.quote_parser.walkSingleQuotes(&ctx.value);
+}
+
+pub fn benchmarkQuoteProcessing(allocator: std.mem.Allocator) !framework.BenchmarkResult {
+    var ctx = QuoteParsingContext.init(allocator);
+    defer ctx.deinit();
+
+    return framework.benchmarkWithSetup(
+        allocator,
+        "Quote Processing",
+        &ctx,
+        runQuoteParsing,
+        resetQuoteParsing,
+        .{},
+    );
+}
+
+// Escape Processing
+const EscapeProcessingContext = struct {
+    value: zigenv.EnvValue,
+
+    pub fn init(allocator: std.mem.Allocator) EscapeProcessingContext {
+        return EscapeProcessingContext{
+            .value = zigenv.EnvValue.init(allocator),
+        };
+    }
+
+    pub fn deinit(self: *EscapeProcessingContext) void {
+        self.value.deinit();
+    }
+};
+
+fn resetEscapeProcessing(ctx: *EscapeProcessingContext) void {
+    ctx.value.clear();
+}
+
+fn runEscapeProcessing(ctx: *EscapeProcessingContext, _: std.mem.Allocator) !void {
+    _ = try zigenv.internal.escape_processor.processPossibleControlCharacter(&ctx.value, 'n');
+}
+
+pub fn benchmarkEscapeProcessing(allocator: std.mem.Allocator) !framework.BenchmarkResult {
+    var ctx = EscapeProcessingContext.init(allocator);
+    defer ctx.deinit();
+
+    return framework.benchmarkWithSetup(
+        allocator,
+        "Escape Processing",
+        &ctx,
+        runEscapeProcessing,
+        resetEscapeProcessing,
+        .{},
+    );
+}
+
+// Comment Skipping
+const CommentSkippingContext = struct {
+    stream: zigenv.EnvStream,
+    content: []const u8,
+
+    pub fn init() CommentSkippingContext {
+        return CommentSkippingContext{
+            .content = "# This is a comment until the end of the line\n",
+            .stream = undefined,
+        };
+    }
+};
+
+fn resetCommentSkipping(ctx: *CommentSkippingContext) void {
+    ctx.stream = zigenv.EnvStream.init(ctx.content);
+}
+
+fn runCommentSkipping(ctx: *CommentSkippingContext, _: std.mem.Allocator) !void {
+    ctx.stream.skipToNewline();
+}
+
+pub fn benchmarkCommentSkipping(allocator: std.mem.Allocator) !framework.BenchmarkResult {
+    var ctx = CommentSkippingContext.init();
+
+    return framework.benchmarkWithSetup(
+        allocator,
+        "Comment Skipping",
+        &ctx,
+        runCommentSkipping,
+        resetCommentSkipping,
+        .{},
+    );
+}
+
+// HashMap Lookup
+const HashMapLookupContext = struct {
+    env: zigenv.Env,
+    key: []const u8,
+
+    pub fn init(allocator: std.mem.Allocator) !HashMapLookupContext {
+        var env = zigenv.Env.init(allocator);
+        try env.put("DATABASE_URL", "postgres://user:pass@localhost:5432/db");
+        try env.put("API_KEY", "sk_live_123456789");
+        try env.put("DEBUG", "true");
+        return HashMapLookupContext{
+            .env = env,
+            .key = "API_KEY",
+        };
+    }
+
+    pub fn deinit(self: *HashMapLookupContext) void {
+        self.env.deinit();
+    }
+};
+
+fn runHashMapLookup(ctx: *HashMapLookupContext, _: std.mem.Allocator) !void {
+    _ = ctx.env.get(ctx.key);
+}
+
+pub fn benchmarkHashMapLookup(allocator: std.mem.Allocator) !framework.BenchmarkResult {
+    var ctx = try HashMapLookupContext.init(allocator);
+    defer ctx.deinit();
+
+    return framework.benchmarkWithSetup(
+        allocator,
+        "HashMap Lookup",
+        &ctx,
+        runHashMapLookup,
+        null,
+        .{},
+    );
+}
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    // Key Parsing
-    const key_result = try benchmarkKeyParsing(allocator);
-    try framework.printResults(key_result);
+    const benchmarks = [_]*const fn (std.mem.Allocator) anyerror!framework.BenchmarkResult{
+        benchmarkKeyParsing,
+        benchmarkValueParsing,
+        benchmarkQuoteProcessing,
+        benchmarkEscapeProcessing,
+        benchmarkCommentSkipping,
+        benchmarkHashMapLookup,
+    };
 
-    // Value Parsing
-    const value_result = try benchmarkValueParsing(allocator);
-    try framework.printResults(value_result);
+    for (benchmarks) |bench| {
+        // We can't easily get the name of the function, but we can print when we start.
+        const result = try bench(allocator);
+        try framework.printResults(result);
+    }
 }

@@ -31,12 +31,17 @@ pub const Env = struct {
 
     /// Internal helper to put owned strings into the map
     pub fn put(self: *Env, key: []const u8, value: []const u8) !void {
-        const gop = try self.map.getOrPut(key);
+        const key_copy = try self.allocator.dupe(u8, key);
+        errdefer self.allocator.free(key_copy);
+        const value_copy = try self.allocator.dupe(u8, value);
+        errdefer self.allocator.free(value_copy);
+
+        const gop = try self.map.getOrPut(key_copy);
         if (gop.found_existing) {
-            self.allocator.free(gop.key_ptr.*);
-            self.allocator.free(gop.value_ptr.*);
-            gop.key_ptr.* = key;
+            self.allocator.free(key_copy); // We already have the key, don't need the copy
+            self.allocator.free(gop.value_ptr.*); // Free old value
+            // key_ptr remains pointing to the original copy in the map
         }
-        gop.value_ptr.* = value;
+        gop.value_ptr.* = value_copy;
     }
 };
