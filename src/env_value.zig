@@ -8,6 +8,7 @@ pub const EnvValue = struct {
 
     // Parsing state
     is_parsing_variable: bool,
+    is_parsing_braceless_variable: bool,
     interpolation_index: usize,
 
     // Quote tracking flags
@@ -38,6 +39,7 @@ pub const EnvValue = struct {
             .interpolations = .{},
 
             .is_parsing_variable = false,
+            .is_parsing_braceless_variable = false,
             .interpolation_index = 0,
 
             .quoted = false,

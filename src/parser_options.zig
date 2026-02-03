@@ -25,6 +25,15 @@ pub const ParserOptions = struct {
     /// Default: true (current behavior - double quotes allow newlines)
     allow_double_quote_heredocs: bool = true,
 
+    /// When enabled, allows variable interpolation without braces (e.g., $VAR).
+    /// Standard behavior only allows ${VAR}.
+    ///
+    /// Variable names with $VAR syntax are terminated by any character that is not
+    /// a valid identifier character (alphanumeric or underscore).
+    ///
+    /// Default: false (backward compatible - requires ${VAR})
+    allow_braceless_variables: bool = false,
+
     /// Returns the default parser options for maximum backward compatibility.
     pub fn defaults() ParserOptions {
         return ParserOptions{};
@@ -36,6 +45,7 @@ pub const ParserOptions = struct {
         return ParserOptions{
             .allow_single_quote_heredocs = true,
             .allow_double_quote_heredocs = true,
+            .allow_braceless_variables = true,
         };
     }
 };

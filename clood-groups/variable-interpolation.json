@@ -3,6 +3,10 @@
     "src/variable_position.zig",
     "src/whitespace_utils.zig",
     "src/finalizer.zig",
+    "src/env_value.zig",
+    "src/reader.zig",
+    "src/parser_options.zig",
+    "tests/braceless_variable_test.zig",
     "Tasks/completed/06_Interpolation_Finalization.md",
     "Tasks/completed/13_migrate_remaining_arraylist_usage.md"
 ]

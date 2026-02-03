@@ -56,6 +56,30 @@ pub fn openVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
     }
 }
 
+/// Called when first char of variable name is encountered in braceless mode (e.g. $VAR)
+/// Assumes pre-checks (unquoted/double-quoted, previous char was $) are done by caller.
+pub fn openBracelessVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
+    _ = allocator;
+    // We assume caller verified previous char is $
+    // value.value_index points to where the current/next char will be written.
+    // Previous char (value_index - 1) is $.
+    const dollar_pos = value.value_index - 1;
+
+    value.is_parsing_braceless_variable = true;
+
+    // start_brace is just used as boundary for whitespace check.
+    // We set it to dollar_pos so checks stop at $.
+    // variable_start is where the current char will be written (value.value_index),
+    // because processing logic usually adds the char to buffer AFTER calling open logic
+    // (if done in `readNextChar` before specific char handling).
+    // OR if existing logic adds $ then processes next char:
+    // If we call this when processing 'V', 'V' is NOT yet in buffer.
+    // So variable_start = value.value_index.
+    const new_pos = VariablePosition.init(value.value_index, dollar_pos, dollar_pos);
+
+    try value.interpolations.append(value.buffer.allocator, new_pos);
+}
+
 /// Called when `}` is encountered; finalize the current variable interpolation.
 pub fn closeVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
     value.is_parsing_variable = false;
@@ -98,6 +122,45 @@ pub fn closeVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
         const len = (interpolation.variable_end - interpolation.variable_start) + 1;
         const start = interpolation.variable_start;
         // Safety check
+        if (start + len <= value.value.len) {
+            const var_name = value.value[start .. start + len];
+            try interpolation.setVariableStr(allocator, var_name);
+        }
+    }
+
+    interpolation.closed = true;
+    value.interpolation_index += 1;
+}
+
+/// Called when a non-identifier char is encountered for a braceless variable.
+/// The terminating char is NOT yet in the buffer.
+pub fn closeBracelessVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
+    value.is_parsing_braceless_variable = false;
+
+    if (value.interpolations.items.len <= value.interpolation_index) {
+        return; // Should not happen
+    }
+
+    const interpolation = &value.interpolations.items[value.interpolation_index];
+
+    // The previous char added to buffer was the last char of variable name.
+    // So end_brace (which we treat as end of token) is value.value_index - 1.
+    if (value.value_index > 0) {
+        interpolation.end_brace = value.value_index - 1;
+        interpolation.variable_end = value.value_index - 1;
+    } else {
+        // Should catch this
+        interpolation.end_brace = 0;
+        interpolation.variable_end = 0;
+    }
+
+    // No whitespace trimming for braceless variables as they can't contain spaces.
+
+    // Extract variable name
+    if (interpolation.variable_end >= interpolation.variable_start) {
+        const len = (interpolation.variable_end - interpolation.variable_start) + 1;
+        const start = interpolation.variable_start;
+
         if (start + len <= value.value.len) {
             const var_name = value.value[start .. start + len];
             try interpolation.setVariableStr(allocator, var_name);

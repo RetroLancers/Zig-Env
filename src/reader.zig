@@ -21,6 +21,14 @@ pub fn clearGarbage(stream: *EnvStream) void {
     }
 }
 
+fn isValidIdentifierChar(c: u8) bool {
+    return std.ascii.isAlphanumeric(c) or c == '_';
+}
+
+fn isValidIdentifierStart(c: u8) bool {
+    return std.ascii.isAlphabetic(c) or c == '_';
+}
+
 pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, options: ParserOptions) !bool {
     // Handle pending backslash streak (if not in single quote mode and current char is not backslash)
     if (!value.quoted and !value.triple_quoted and value.back_slash_streak > 0) {
@@ -32,6 +40,33 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, op
                     return true;
                 }
                 try buffer_utils.addToBuffer(value, '\\');
+            }
+        }
+    }
+
+    // Handle braceless variable termination
+    if (value.is_parsing_braceless_variable) {
+        if (!isValidIdentifierChar(char)) {
+            try interpolation.closeBracelessVariable(allocator, value);
+        }
+    }
+
+    // Handle braceless variable start
+    // We check this BEFORE processing the character because if we just finished a $,
+    // and this char is a valid start, we start the variable.
+    if (options.allow_braceless_variables and !value.is_parsing_variable and !value.is_parsing_braceless_variable) {
+        // Variables enabled only if not in single quotes/triple single quotes
+        if (!value.quoted and !value.triple_quoted) {
+            // Check if we have a $ in the buffer (and it wasn't escaped)
+            if (value.value_index > 0 and value.value[value.value_index - 1] == '$') {
+                const dollar_idx = value.value_index - 1;
+                const is_escaped_dollar = if (value.escaped_dollar_index) |idx| idx == dollar_idx else false;
+
+                if (!is_escaped_dollar and !buffer_utils.isPreviousCharAnEscape(value)) {
+                    if (isValidIdentifierStart(char)) {
+                        try interpolation.openBracelessVariable(allocator, value);
+                    }
+                }
             }
         }
     }
@@ -73,6 +108,12 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, op
             }
         } else if (char != '"' and char != '\'') {
             if (!value.quoted and !value.triple_quoted and !value.double_quoted and !value.triple_double_quoted) {
+                // Determine if this is an implicit double quote or starting a variable
+                // If options.allow_braceless_variables is on, and char is $, it technically starts a variable later.
+                // But leading $ is handled by next char.
+                // Actually if string starts with $, value_index is 0.
+                // We add $. Then next char.
+                // So implicit double quote logic works fine.
                 value.double_quoted = true;
                 value.implicit_double_quote = true;
             }
@@ -156,6 +197,9 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, op
             } else {
                 try buffer_utils.addToBuffer(value, char);
             }
+            return true;
+        },
+        '\r' => {
             return true;
         },
         else => {
@@ -254,6 +298,11 @@ pub fn readValue(allocator: std.mem.Allocator, stream: *EnvStream, value: *EnvVa
         while (value.value_index > 0 and value.value[value.value_index - 1] == ' ') {
             value.value_index -= 1;
         }
+    }
+
+    // Close any open braceless variable at EOF/End of value
+    if (value.is_parsing_braceless_variable) {
+        try interpolation.closeBracelessVariable(allocator, value);
     }
 
     return ReadResult.success;
