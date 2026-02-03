@@ -36,13 +36,46 @@ test "single quoted - SingleQuoted" {
     try testing.expectEqualStrings("literal \\n ${var}", env.get("KEY").?);
 }
 
-test "backtick quote - BackTickQuote" {
+test "backtick mixed quotes" {
     const allocator = testing.allocator;
 
-    const content = "KEY=`value`";
+    const content = "KEY=`double \"quotes\" and single 'quotes' work inside backticks`";
 
     var env = try parser.parseString(allocator, content);
     defer env.deinit();
 
-    try testing.expectEqualStrings("value", env.get("KEY").?);
+    try testing.expectEqualStrings("double \"quotes\" and single 'quotes' work inside backticks", env.get("KEY").?);
+}
+
+test "backticks inside single quotes" {
+    const allocator = testing.allocator;
+
+    const content = "KEY='`backticks` work inside single quotes'";
+
+    var env = try parser.parseString(allocator, content);
+    defer env.deinit();
+
+    try testing.expectEqualStrings("`backticks` work inside single quotes", env.get("KEY").?);
+}
+
+test "backticks inside double quotes" {
+    const allocator = testing.allocator;
+
+    const content = "KEY=\"`backticks` work inside double quotes\"";
+
+    var env = try parser.parseString(allocator, content);
+    defer env.deinit();
+
+    try testing.expectEqualStrings("`backticks` work inside double quotes", env.get("KEY").?);
+}
+
+test "unquoted padding" {
+    const allocator = testing.allocator;
+
+    const content = "key=    some spaced out string    ";
+
+    var env = try parser.parseString(allocator, content);
+    defer env.deinit();
+
+    try testing.expectEqualStrings("some spaced out string", env.get("key").?);
 }

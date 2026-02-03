@@ -89,3 +89,39 @@ test "heredoc double quote unclosed" {
     // The leading space in """ $ {b } is preserved.
     try testing.expectEqualStrings(" \nheredoc\n", env.get("c").?);
 }
+
+test "Heredoc with Comment" {
+    const allocator = testing.allocator;
+
+    const content =
+        \\message="""Greetings
+        \\...
+        \\""" #k
+        \\cc_message="${message}"
+    ;
+
+    var env = try lib.parseString(allocator, content);
+    defer env.deinit();
+
+    try testing.expectEqualStrings("Greetings\n...\n", env.get("message").?);
+    try testing.expectEqualStrings("Greetings\n...\n", env.get("cc_message").?);
+}
+
+test "DoubleQuotedHereDoc3 variations" {
+    const allocator = testing.allocator;
+
+    const content =
+        \\a="""
+        \\foo
+        \\"""bar
+        \\b="""
+        \\baz
+        \\""" # comment
+    ;
+
+    var env = try lib.parseString(allocator, content);
+    defer env.deinit();
+
+    try testing.expectEqualStrings("\nfoo\n", env.get("a").?);
+    try testing.expectEqualStrings("\nbaz\n", env.get("b").?);
+}

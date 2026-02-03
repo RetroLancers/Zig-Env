@@ -25,3 +25,28 @@ test "all control characters" {
     const expected = "\n\t\r\x08\x0C\x0B\x07\"\'\\";
     try testing.expectEqualStrings(expected, env.get("KEY").?);
 }
+
+test "ControlCodes Parity" {
+    const allocator = testing.allocator;
+
+    const content =
+        \\a=\tb\n
+        \\b=\\\\
+        \\c=\\\\t
+        \\d="\\\\\t"
+        \\e=" \\ \\ \ \\ \\\\t"
+        \\f=" \\ \\ \b \\ \\\\t"
+        \\g=" \\ \\ \r \\ \\\\b\n"
+    ;
+
+    var env = try parser.parseString(allocator, content);
+    defer env.deinit();
+
+    try testing.expectEqualStrings("\tb\n", env.get("a").?);
+    try testing.expectEqualStrings("\\\\", env.get("b").?);
+    try testing.expectEqualStrings("\\\\t", env.get("c").?);
+    try testing.expectEqualStrings("\\\\\t", env.get("d").?);
+    try testing.expectEqualStrings(" \\ \\ \\ \\ \\\\t", env.get("e").?);
+    try testing.expectEqualStrings(" \\ \\ \x08 \\ \\\\t", env.get("f").?);
+    try testing.expectEqualStrings(" \\ \\ \r \\ \\\\b\n", env.get("g").?);
+}
