@@ -113,4 +113,22 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_lib_unit_tests.step);
     test_step.dependOn(&run_exe_unit_tests.step);
+
+    // Add external test files
+    const test_files = [_][]const u8{
+        "test/basic_parsing.zig",
+        "test/quotes.zig",
+        "test/escapes.zig",
+    };
+
+    for (test_files) |test_file| {
+        const tests = b.addTest(.{
+            .root_source_file = b.path(test_file),
+            .target = target,
+            .optimize = optimize,
+        });
+        tests.root_module.addImport("Zig_Env_lib", lib_mod);
+        const run_tests = b.addRunArtifact(tests);
+        test_step.dependOn(&run_tests.step);
+    }
 }

@@ -1,0 +1,9 @@
+{
+    "name": "basic-tests",
+    "description": "Fundamental test cases for .env parsing",
+    "files": [
+        "test/basic_parsing.zig",
+        "test/quotes.zig",
+        "test/escapes.zig"
+    ]
+}

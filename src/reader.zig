@@ -37,16 +37,18 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8) !b
     // Handle pending single quote streak (if not in double quote mode and current char is not single quote)
     if (!value.triple_double_quoted and !value.double_quoted and value.single_quote_streak > 0) {
         if (char != '\'') {
-            const stop = try quote_parser.walkSingleQuotes(value);
-            if (stop) return false;
+            if (try quote_parser.walkSingleQuotes(value)) {
+                return false;
+            }
         }
     }
 
     // Handle pending double quote streak (if not in single quote mode and current char is not double quote)
     if (!value.triple_quoted and !value.quoted and value.double_quote_streak > 0) {
         if (char != '"') {
-            const stop = try quote_parser.walkDoubleQuotes(value);
-            if (stop) return false;
+            if (try quote_parser.walkDoubleQuotes(value)) {
+                return false;
+            }
         }
     }
 
@@ -59,6 +61,7 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8) !b
             if (!value.quoted and !value.triple_quoted and !value.double_quoted and !value.triple_double_quoted) {
                 value.double_quoted = true;
                 value.backtick_quoted = true;
+                return true;
             }
         }
 
@@ -134,17 +137,6 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8) !b
         '\'' => {
             if (!value.double_quoted and !value.triple_double_quoted) {
                 value.single_quote_streak += 1;
-
-                // Determine if we should process immediately
-                const should_process = (value.quoted or value.triple_quoted) or (value.value_index == value.single_quote_streak - 1);
-
-                if (should_process) {
-                    const stop = try quote_parser.walkSingleQuotes(value);
-                    if (stop) return false; // Closing quote - don't add to buffer
-                }
-
-                // If we reach here, it's an opening quote - add to buffer
-                try buffer_utils.addToBuffer(value, char);
             } else {
                 try buffer_utils.addToBuffer(value, char);
             }
@@ -153,17 +145,6 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8) !b
         '"' => {
             if (!value.quoted and !value.triple_quoted and !value.backtick_quoted and !value.implicit_double_quote) {
                 value.double_quote_streak += 1;
-
-                // Determine if we should process immediately
-                const should_process = (value.double_quoted or value.triple_double_quoted) or (value.value_index == value.double_quote_streak - 1);
-
-                if (should_process) {
-                    const stop = try quote_parser.walkDoubleQuotes(value);
-                    if (stop) return false; // Closing quote - don't add to buffer
-                }
-
-                // If we reach here, it's an opening quote - add to buffer
-                try buffer_utils.addToBuffer(value, char);
             } else {
                 try buffer_utils.addToBuffer(value, char);
             }
@@ -517,17 +498,22 @@ test "readNextChar quotes" {
 
     // '
     _ = try readNextChar(testing.allocator, &val, '\'');
-    try testing.expect(val.quoted);
-    try testing.expectEqualStrings("'", val.value);
+    // Not quoted yet, still in streak
+    try testing.expect(!val.quoted);
 
-    // val
+    // val - this triggers the walk
     _ = try readNextChar(testing.allocator, &val, 'v');
-    try testing.expectEqualStrings("'v", val.value);
+    try testing.expect(val.quoted);
+    try testing.expectEqualStrings("v", val.value);
 
-    // ' -> end (stop reading)
+    // ' -> closing quote starts streak
     const cont = try readNextChar(testing.allocator, &val, '\'');
-    try testing.expect(!cont);
-    try testing.expectEqualStrings("'v", val.value);
+    try testing.expect(cont);
+
+    // any other char -> triggers the walk that returns false
+    const cont2 = try readNextChar(testing.allocator, &val, ' ');
+    try testing.expect(!cont2);
+    try testing.expectEqualStrings("v", val.value);
 }
 
 test "readNextChar double quotes" {
@@ -536,15 +522,21 @@ test "readNextChar double quotes" {
 
     // "
     _ = try readNextChar(testing.allocator, &val, '"');
-    try testing.expect(val.double_quoted);
+    try testing.expect(!val.double_quoted);
 
-    // v
+    // v - this triggers the walk
     _ = try readNextChar(testing.allocator, &val, 'v');
+    try testing.expect(val.double_quoted);
+    try testing.expectEqualStrings("v", val.value);
 
-    // "
+    // " -> closing quote starts streak
     const cont = try readNextChar(testing.allocator, &val, '"');
-    try testing.expect(!cont);
-    try testing.expectEqualStrings("\"v", val.value);
+    try testing.expect(cont);
+
+    // any other char -> triggers the walk that returns false
+    const cont2 = try readNextChar(testing.allocator, &val, ' ');
+    try testing.expect(!cont2);
+    try testing.expectEqualStrings("v", val.value);
 }
 
 test "readNextChar escape" {
