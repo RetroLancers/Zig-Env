@@ -122,14 +122,14 @@ Do NOT integrate into the main parsing flow yet. This task is just about:
 **Note:** Integration will happen in Task 16.
 
 ## Success Criteria
-- [ ] `src/file_scanner.zig` created with `scanBufferSizes()` function
-- [ ] `BufferSizeHints` struct defined
-- [ ] Heredoc detection heuristic implemented
-- [ ] `initCapacity()` methods added to EnvKey and EnvValue
-- [ ] `initWithCapacity()` added to EnvPair
-- [ ] All unit tests pass
-- [ ] Scanner handles edge cases (comments, empty lines, Windows endings)
-- [ ] Module exported in `src/root.zig`
+- [x] `src/file_scanner.zig` created with `scanBufferSizes()` function
+- [x] `BufferSizeHints` struct defined
+- [x] Heredoc detection heuristic implemented
+- [x] `initCapacity()` methods added to EnvKey and EnvValue
+- [x] `initWithCapacity()` added to EnvPair
+- [x] All unit tests pass
+- [x] Scanner handles edge cases (comments, empty lines, Windows endings)
+- [x] Module exported in `src/root.zig`
 
 ## Dependencies
 - Task 10 (ReusableBuffer must exist for capacity initialization)

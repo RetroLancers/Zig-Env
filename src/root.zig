@@ -8,6 +8,7 @@ pub const EnvPair = @import("env_pair.zig").EnvPair;
 pub const VariablePosition = @import("variable_position.zig").VariablePosition;
 pub const ReadResult = @import("result_enums.zig").ReadResult;
 pub const FinalizeResult = @import("result_enums.zig").FinalizeResult;
+pub const file_scanner = @import("file_scanner.zig");
 
 // Public API
 pub const parse = @import("lib.zig").parse;
@@ -34,4 +35,5 @@ test {
     _ = @import("reader.zig");
     _ = @import("memory.zig");
     _ = @import("lib.zig");
+    _ = @import("file_scanner.zig");
 }

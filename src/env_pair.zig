@@ -13,6 +13,13 @@ pub const EnvPair = struct {
         };
     }
 
+    pub fn initWithCapacity(allocator: std.mem.Allocator, key_capacity: usize, value_capacity: usize) !EnvPair {
+        return EnvPair{
+            .key = try EnvKey.initCapacity(allocator, key_capacity),
+            .value = try EnvValue.initCapacity(allocator, value_capacity),
+        };
+    }
+
     pub fn deinit(self: *EnvPair) void {
         self.key.deinit();
         self.value.deinit();
@@ -41,4 +48,13 @@ test "EnvPair initialization and lifecycle" {
 
     try std.testing.expectEqualStrings("key", pair.key.key);
     try std.testing.expectEqualStrings("value", pair.value.value);
+}
+
+test "EnvPair initWithCapacity" {
+    const allocator = std.testing.allocator;
+    var pair = try EnvPair.initWithCapacity(allocator, 50, 150);
+    defer pair.deinit();
+
+    try std.testing.expect(pair.key.buffer.capacity >= 50);
+    try std.testing.expect(pair.value.buffer.capacity >= 150);
 }

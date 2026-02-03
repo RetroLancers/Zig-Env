@@ -1,0 +1,11 @@
+{
+    "name": "performance-optimization",
+    "description": "Optimizations for memory allocation and parsing speed",
+    "files": [
+        "src/file_scanner.zig",
+        "src/env_key.zig",
+        "src/env_value.zig",
+        "src/env_pair.zig",
+        "Tasks/in_progress/15_implement_file_prescanning.md"
+    ]
+}

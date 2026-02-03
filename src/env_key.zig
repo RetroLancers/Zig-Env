@@ -15,6 +15,14 @@ pub const EnvKey = struct {
         };
     }
 
+    pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !EnvKey {
+        return EnvKey{
+            .key = "",
+            .buffer = try ReusableBuffer.initCapacity(allocator, capacity),
+            .key_index = 0,
+        };
+    }
+
     pub fn deinit(self: *EnvKey) void {
         self.buffer.deinit();
     }
@@ -50,6 +58,15 @@ test "EnvKey initialization" {
     try std.testing.expectEqualStrings("", key.key);
     try std.testing.expect(key.buffer.items.len == 0);
     try std.testing.expectEqual(@as(usize, 0), key.key_index);
+}
+
+test "EnvKey initCapacity" {
+    const allocator = std.testing.allocator;
+    var key = try EnvKey.initCapacity(allocator, 100);
+    defer key.deinit();
+
+    try std.testing.expectEqual(@as(usize, 0), key.buffer.items.len);
+    try std.testing.expect(key.buffer.capacity >= 100);
 }
 
 test "EnvKey buffer ownership" {

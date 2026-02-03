@@ -60,6 +60,13 @@ pub const EnvValue = struct {
         };
     }
 
+    pub fn initCapacity(allocator: std.mem.Allocator, capacity: usize) !EnvValue {
+        var value = init(allocator);
+        value.buffer.deinit();
+        value.buffer = try ReusableBuffer.initCapacity(allocator, capacity);
+        return value;
+    }
+
     pub fn deinit(self: *EnvValue) void {
         for (self.interpolations.items) |*item| {
             item.deinit();
@@ -99,6 +106,15 @@ test "EnvValue initialization" {
     try std.testing.expectEqualStrings("", val.value);
     try std.testing.expect(val.interpolations.items.len == 0);
     try std.testing.expect(!val.quoted);
+}
+
+test "EnvValue initCapacity" {
+    const allocator = std.testing.allocator;
+    var val = try EnvValue.initCapacity(allocator, 256);
+    defer val.deinit();
+
+    try std.testing.expectEqual(@as(usize, 0), val.buffer.items.len);
+    try std.testing.expect(val.buffer.capacity >= 256);
 }
 
 test "EnvValue buffer ownership" {
