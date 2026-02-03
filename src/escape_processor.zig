@@ -62,10 +62,13 @@ pub fn processPossibleControlCharacter(value: *EnvValue, char: u8) !bool {
             try addToBuffer(value, '\\');
             process = true;
         },
+        '$' => {
+            try addToBuffer(value, '$');
+            value.escaped_dollar_index = value.value_index - 1;
+            process = true;
+        },
         else => {
-            // Not a recognized escape - add literal backslash then the char
-            try addToBuffer(value, '\\');
-            try addToBuffer(value, char);
+            // Not a recognized escape.
             process = false;
         },
     }
@@ -166,7 +169,7 @@ test "processPossibleControlCharacter - unknown escapes" {
     // \z -> \z
     const processed = try processPossibleControlCharacter(&val, 'z');
     try std.testing.expect(!processed);
-    try std.testing.expectEqualStrings("\\z", val.value);
+    try std.testing.expectEqualStrings("", val.value);
     try std.testing.expectEqual(@as(usize, 0), val.back_slash_streak);
 }
 

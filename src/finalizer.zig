@@ -37,9 +37,7 @@ pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *std.A
         i -= 1;
         const interp = pair.value.interpolations.items[i];
 
-        // Extract variable name from ${variable_name}
-        // interpolation.open_brace and interpolation.end_brace indices are relative to pair.value.value
-        const var_name = pair.value.value[interp.start_brace + 1 .. interp.end_brace];
+        const var_name = interp.variable_str;
 
         // Find matching key in pairs
         if (findPairByKey(pairs, var_name)) |referenced_pair| {
@@ -118,6 +116,7 @@ test "finalizeValue - basic substitution" {
     p2.value.value = "${VAR} world";
     var vp_ref = VariablePosition.init(0, 1, 0);
     vp_ref.end_brace = 5;
+    try vp_ref.setVariableStr(allocator, "VAR");
     try p2.value.interpolations.append(vp_ref);
     try pairs.append(p2);
 
@@ -140,6 +139,7 @@ test "finalizeValue - recursive substitution" {
     p1.value.value = "${B}";
     var vp_a1 = VariablePosition.init(0, 1, 0);
     vp_a1.end_brace = 3;
+    try vp_a1.setVariableStr(allocator, "B");
     try p1.value.interpolations.append(vp_a1);
     try pairs.append(p1);
 
@@ -149,6 +149,7 @@ test "finalizeValue - recursive substitution" {
     p2.value.value = "${C}";
     var vp_b1 = VariablePosition.init(0, 1, 0);
     vp_b1.end_brace = 3;
+    try vp_b1.setVariableStr(allocator, "C");
     try p2.value.interpolations.append(vp_b1);
     try pairs.append(p2);
 
@@ -178,6 +179,7 @@ test "finalizeValue - circular dependency" {
     p1.value.value = "${B}";
     var vp_a2 = VariablePosition.init(0, 1, 0);
     vp_a2.end_brace = 3;
+    try vp_a2.setVariableStr(allocator, "B");
     try p1.value.interpolations.append(vp_a2);
     try pairs.append(p1);
 
@@ -187,6 +189,7 @@ test "finalizeValue - circular dependency" {
     p2.value.value = "${A}";
     var vp_b2 = VariablePosition.init(0, 1, 0);
     vp_b2.end_brace = 3;
+    try vp_b2.setVariableStr(allocator, "A");
     try p2.value.interpolations.append(vp_b2);
     try pairs.append(p2);
 
@@ -209,6 +212,7 @@ test "finalizeValue - missing variable" {
     p1.value.value = "${MISSING}";
     var vp_missing = VariablePosition.init(0, 1, 0);
     vp_missing.end_brace = 9;
+    try vp_missing.setVariableStr(allocator, "MISSING");
     try p1.value.interpolations.append(vp_missing);
     try pairs.append(p1);
 
@@ -240,9 +244,11 @@ test "finalizeValue - multiple interpolations in reverse order" {
     p3.value.value = "${A}${B}";
     var vp_a = VariablePosition.init(0, 1, 0);
     vp_a.end_brace = 3;
+    try vp_a.setVariableStr(allocator, "A");
     try p3.value.interpolations.append(vp_a); // ${A}
     var vp_b = VariablePosition.init(4, 5, 4);
     vp_b.end_brace = 7;
+    try vp_b.setVariableStr(allocator, "B");
     try p3.value.interpolations.append(vp_b); // ${B}
     try pairs.append(p3);
 
@@ -265,6 +271,7 @@ test "finalizeValue - indirect circular dependency" {
     p1.value.value = "${B}";
     var vp_a = VariablePosition.init(0, 1, 0);
     vp_a.end_brace = 3;
+    try vp_a.setVariableStr(allocator, "B");
     try p1.value.interpolations.append(vp_a);
     try pairs.append(p1);
 
@@ -274,6 +281,7 @@ test "finalizeValue - indirect circular dependency" {
     p2.value.value = "${C}";
     var vp_b = VariablePosition.init(0, 1, 0);
     vp_b.end_brace = 3;
+    try vp_b.setVariableStr(allocator, "C");
     try p2.value.interpolations.append(vp_b);
     try pairs.append(p2);
 
@@ -283,6 +291,7 @@ test "finalizeValue - indirect circular dependency" {
     p3.value.value = "${A}";
     var vp_c = VariablePosition.init(0, 1, 0);
     vp_c.end_brace = 3;
+    try vp_c.setVariableStr(allocator, "A");
     try p3.value.interpolations.append(vp_c);
     try pairs.append(p3);
 
@@ -309,9 +318,11 @@ test "finalizeValue - same variable twice" {
     p2.value.value = "${A}${A}";
     var vp1 = VariablePosition.init(0, 1, 0);
     vp1.end_brace = 3;
+    try vp1.setVariableStr(allocator, "A");
     try p2.value.interpolations.append(vp1);
     var vp2 = VariablePosition.init(4, 5, 4);
     vp2.end_brace = 7;
+    try vp2.setVariableStr(allocator, "A");
     try p2.value.interpolations.append(vp2);
     try pairs.append(p2);
 

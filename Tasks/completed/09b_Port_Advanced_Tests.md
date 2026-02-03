@@ -111,38 +111,38 @@ These tests validate the complex features: variable interpolation, circular depe
 
 ## Checklist
 
-- [ ] Create advanced test files
-- [ ] Port **InterpolateValues** test
-  - [ ] Basic substitution
-  - [ ] Multiple interpolations
-- [ ] Port **InterpolateValuesAdvanced** test
-  - [ ] Chained references
-  - [ ] Order independence
-- [ ] Port **InterpolateValuesCircular** test
-  - [ ] Direct circular
-  - [ ] Indirect circular
-  - [ ] Verify literals preserved
-- [ ] Port **InterpolateValuesEscaped** test
-  - [ ] Escaped dollar sign
-  - [ ] No interpolation
-- [ ] Port **InterpolateUnClosed** test
-  - [ ] Unclosed brace handling
-  - [ ] No crash
-- [ ] Port **TripleSingleQuotedWithMoreGarbage** test
-  - [ ] Heredoc parsing
-  - [ ] Garbage clearing
-- [ ] Port **DoubleQuotedHereDoc** test
-  - [ ] Multi-line values
-  - [ ] Escape processing
-- [ ] Port **DoubleQuotedHereDoc2** test
-  - [ ] Heredoc with interpolation
-  - [ ] Multiple interpolations
-- [ ] Port additional edge case tests
-  - [ ] Empty values
-  - [ ] Whitespace in `${}`
-  - [ ] Windows line endings
-- [ ] Run all tests: `zig build test`
-- [ ] Verify 100% pass rate
+- [x] Create advanced test files
+- [x] Port **InterpolateValues** test
+  - [x] Basic substitution
+  - [x] Multiple interpolations
+- [x] Port **InterpolateValuesAdvanced** test
+  - [x] Chained references
+  - [x] Order independence
+- [x] Port **InterpolateValuesCircular** test
+  - [x] Direct circular
+  - [x] Indirect circular
+  - [x] Verify literals preserved
+- [x] Port **InterpolateValuesEscaped** test
+  - [x] Escaped dollar sign
+  - [x] No interpolation
+- [x] Port **InterpolateUnClosed** test
+  - [x] Unclosed brace handling
+  - [x] No crash
+- [x] Port **TripleSingleQuotedWithMoreGarbage** test
+  - [x] Heredoc parsing
+  - [x] Garbage clearing
+- [x] Port **DoubleQuotedHereDoc** test
+  - [x] Multi-line values
+  - [x] Escape processing
+- [x] Port **DoubleQuotedHereDoc2** test
+  - [x] Heredoc with interpolation
+  - [x] Multiple interpolations
+- [x] Port additional edge case tests
+  - [x] Empty values
+  - [x] Whitespace in `${}`
+  - [x] Windows line endings
+- [x] Run all tests: `zig build test`
+- [x] Verify 100% pass rate
 
 ## Dependencies
 - Task 09a (Basic Tests) - **must be 100% passing first**

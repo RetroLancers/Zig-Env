@@ -21,7 +21,11 @@ pub fn positionOfDollarLastSign(value: *const EnvValue) ?usize {
     while (tmp >= 0) {
         const u_tmp = @as(usize, @intCast(tmp));
         if (value.value[u_tmp] == '$') {
-            // Check for escape
+            // Check for explicit escape recorded during parsing
+            if (value.escaped_dollar_index) |esc_idx| {
+                if (u_tmp == esc_idx) return null;
+            }
+            // Check for literal backslash check (still useful for some cases)
             if (u_tmp > 0 and value.value[u_tmp - 1] == '\\') {
                 return null; // escaped $
             }

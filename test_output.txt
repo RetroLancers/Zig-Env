@@ -1,82 +1,84 @@
-1/55 root.test_0...OK
-2/55 env_stream.test.EnvStream basic reading...OK
-3/55 env_stream.test.EnvStream empty stream...OK
-4/55 env_stream.test.EnvStream state tracking...OK
-5/55 variable_position.test.VariablePosition initialization...OK
-6/55 variable_position.test.VariablePosition memory cleanup...OK
-7/55 result_enums.test.ReadResult enum values...OK
-8/55 env_key.test.EnvKey initialization...OK
-9/55 env_key.test.EnvKey buffer ownership...OK
-10/55 env_key.test.EnvKey clip buffer...OK
-11/55 env_value.test.EnvValue initialization...OK
-12/55 env_value.test.EnvValue buffer ownership...OK
-13/55 env_value.test.EnvValue interpolations...OK
-14/55 env_pair.test.EnvPair initialization and lifecycle...OK
-15/55 buffer_utils.test.addToBuffer...OK
-16/55 buffer_utils.test.isPreviousCharAnEscape...OK
-17/55 whitespace_utils.test.getWhiteSpaceOffsetLeft...OK
-18/55 whitespace_utils.test.getWhiteSpaceOffsetRight...OK
-19/55 escape_processor.test.walkBackSlashes - paired backslashes...OK
-20/55 escape_processor.test.walkBackSlashes - odd backslashes...OK
-21/55 escape_processor.test.walkBackSlashes - zero backslashes...OK
-22/55 escape_processor.test.processPossibleControlCharacter - known escapes...OK
-23/55 escape_processor.test.processPossibleControlCharacter - unknown escapes...OK
-24/55 escape_processor.test.full flow simulation...OK
-25/55 quote_parser.test.walkSingleQuotes - basic...OK
-26/55 quote_parser.test.walkSingleQuotes - empty...OK
-27/55 quote_parser.test.walkSingleQuotes - heredoc...OK
-28/55 quote_parser.test.walkSingleQuotes - excess quotes start...OK
-29/55 quote_parser.test.walkSingleQuotes - excess quotes end...OK
-30/55 quote_parser.test.walkDoubleQuotes - basic...OK
-31/55 quote_parser.test.walkDoubleQuotes - single quotes inside...OK
-32/55 quote_parser.test.walkSingleQuotes - double quotes inside...OK
-33/55 quote_parser.test.walkDoubleQuotes - empty...OK
-34/55 quote_parser.test.walkDoubleQuotes - heredoc...OK
-35/55 quote_parser.test.walkDoubleQuotes - excess...OK
-36/55 interpolation.test.positionOfDollarLastSign basic...OK
-37/55 interpolation.test.positionOfDollarLastSign with escape...OK
-38/55 interpolation.test.open and close variable...FAIL (TestUnexpectedResult)
-C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff65b85534f in expect (test.exe.obj)
+test
++- run test 8/9 passed, 1 failed
+error: 'interpolation.test.escaped dollar sign - InterpolateValuesEscaped' failed: ====== expected this output: =========
+${VAR}ΓÉâ
+
+======== instead found this: =========
+\${VAR}ΓÉâ
+
+======================================
+First difference occurs on line 1:
+expected:
+${VAR}
+^ ('\x24')
+found:
+\${VAR}
+^ ('\x5c')
+C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:641:9: 0x7ff7cf317508 in expectEqualStrings (test.exe.obj)
+        return error.TestExpectedEqual;
+        ^
+C:\DevCurrent\Zig-Env\test\interpolation.zig:105:5: 0x7ff7cf391ce1 in test.escaped dollar sign - InterpolateValuesEscaped (test.exe.obj)
+    try testing.expectEqualStrings("${VAR}", env.get("KEY").?);
+    ^
+error: while executing test 'interpolation.test.whitespace trimming in interpolation', the following test command failed:
+C:\DevCurrent\Zig-Env\.zig-cache\o\eb1bfe7022c675221fb01065e053500f\test.exe --seed=0x891b4ca5 --cache-dir=C:\DevCurrent\Zig-Env\.zig-cache --listen=- 
+test
++- run test 75/81 passed, 6 failed
+error: 'finalizer.test.finalizeValue - basic substitution' failed: C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff74260534f in expect (test.exe.obj)
     if (!ok) return error.TestUnexpectedResult;
              ^
-C:\DevCurrent\Zig-Env\src\interpolation.zig:177:5: 0x7ff65b860c4c in test.open and close variable (test.exe.obj)
-    try std.testing.expect(val.is_parsing_variable);
+C:\DevCurrent\Zig-Env\src\finalizer.zig:123:5: 0x7ff742611e51 in test.finalizeValue - basic substitution (test.exe.obj)
+    try std.testing.expect(res == .interpolated);
     ^
-39/55 reader.test.clearGarbage clears to newline...OK
-40/55 reader.test.clearGarbage handles EOF...OK
-41/55 reader.test.readKey simple key...OK
-42/55 reader.test.readKey leading spaces...OK
-43/55 reader.test.readKey internal spaces...OK
-44/55 reader.test.readKey comment line...OK
-45/55 reader.test.readKey invalid key...OK
-46/55 reader.test.readKey windows line endings...OK
-47/55 reader.test.readKey EOF during key...OK
-48/55 reader.test.readNextChar basic...OK
-49/55 reader.test.readNextChar implicit double quote...OK
-50/55 reader.test.readNextChar backtick...OK
-51/55 reader.test.readNextChar comment...OK
-52/55 reader.test.readNextChar quotes...FAIL (TestUnexpectedResult)
-C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff65b85534f in expect (test.exe.obj)
+error: 'finalizer.test.finalizeValue - recursive substitution' failed: C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff74260534f in expect (test.exe.obj)
     if (!ok) return error.TestUnexpectedResult;
              ^
-C:\DevCurrent\Zig-Env\src\reader.zig:346:5: 0x7ff65b863a9e in test.readNextChar quotes (test.exe.obj)
-    try testing.expect(val.quoted);
-    ^
-53/55 reader.test.readNextChar double quotes...FAIL (TestUnexpectedResult)
-C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff65b85534f in expect (test.exe.obj)
+C:\DevCurrent\Zig-Env\src\finalizer.zig:160:5: 0x7ff742614db2 in test.finalizeValue - recursive substitution (test.exe.obj)
+    try std.testing.expect(res == .interpolated);
+error: 'finalizer.test.finalizeValue - circular dependency' failed:     ^
+C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff74260534f in expect (test.exe.obj)
     if (!ok) return error.TestUnexpectedResult;
              ^
-C:\DevCurrent\Zig-Env\src\reader.zig:365:5: 0x7ff65b863dbe in test.readNextChar double quotes (test.exe.obj)
-    try testing.expect(val.double_quoted);
-    ^
-54/55 reader.test.readNextChar escape...OK
-55/55 reader.test.readNextChar interpolation...FAIL (TestUnexpectedResult)
-C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff65b85534f in expect (test.exe.obj)
+C:\DevCurrent\Zig-Env\src\finalizer.zig:193:5: 0x7ff7426158ce in test.finalizeValue - circular dependency (test.exe.obj)
+    try std.testing.expect(res == .circular);
+error: 'finalizer.test.finalizeValue - multiple interpolations in reverse order' failed:     ^
+C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff74260534f in expect (test.exe.obj)
     if (!ok) return error.TestUnexpectedResult;
              ^
-C:\DevCurrent\Zig-Env\src\reader.zig:406:5: 0x7ff65b864412 in test.readNextChar interpolation (test.exe.obj)
-    try testing.expect(val.is_parsing_variable);
+C:\DevCurrent\Zig-Env\src\finalizer.zig:248:5: 0x7ff742616b7a in test.finalizeValue - multiple interpolations in reverse order (test.exe.obj)
+    try std.testing.expect(res == .interpolated);
     ^
-51 passed; 0 skipped; 4 failed.
-error: the following test command failed with exit code 1:
-C:\DevCurrent\Zig-Env\.zig-cache\o\f55a9f57f6a088d809bf1e6699a31b1a\test.exe --seed=0xa260b68
+error: 'finalizer.test.finalizeValue - indirect circular dependency' failed: C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff74260534f in expect (test.exe.obj)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+C:\DevCurrent\Zig-Env\src\finalizer.zig:288:5: 0x7ff742617873 in test.finalizeValue - indirect circular dependency (test.exe.obj)
+    try std.testing.expect(res == .circular);
+    ^
+error: 'finalizer.test.finalizeValue - same variable twice' failed: C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib\std\testing.zig:580:14: 0x7ff74260534f in expect (test.exe.obj)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+C:\DevCurrent\Zig-Env\src\finalizer.zig:317:5: 0x7ff742618270 in test.finalizeValue - same variable twice (test.exe.obj)
+    try std.testing.expect(res == .interpolated);
+    ^
+error: while executing test 'lib.test.Env methods', the following test command failed:
+C:\DevCurrent\Zig-Env\.zig-cache\o\4c0b7324a39ec4389494a26f56d2c763\test.exe --seed=0x891b4ca5 --cache-dir=C:\DevCurrent\Zig-Env\.zig-cache --listen=- 
+Build Summary: 14/17 steps succeeded; 2 failed; 99/106 tests passed; 7 failed
+test transitive failure
++- run test 75/81 passed, 6 failed
+|  +- zig test Debug native cached 74ms MaxRSS:19M
++- run test 1 passed 39ms MaxRSS:3M
+|  +- zig test Debug native cached 73ms MaxRSS:19M
++- run test 2 passed 39ms MaxRSS:3M
+|  +- zig test Debug native cached 74ms MaxRSS:19M
++- run test 4 passed 39ms MaxRSS:3M
+|  +- zig test Debug native cached 73ms MaxRSS:19M
++- run test 2 passed 39ms MaxRSS:3M
+|  +- zig test Debug native cached 74ms MaxRSS:19M
++- run test 8/9 passed, 1 failed
+|  +- zig test Debug native cached 73ms MaxRSS:19M
++- run test 4 passed 39ms MaxRSS:3M
+|  +- zig test Debug native cached 74ms MaxRSS:19M
++- run test 3 passed 39ms MaxRSS:3M
+   +- zig test Debug native cached 73ms MaxRSS:19M
+error: the following build command failed with exit code 1:
+C:\DevCurrent\Zig-Env\.zig-cache\o\6db039cc1ee98d7f8acd9aa945ecf2c1\build.exe C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\zig.exe C:\ProgramData\chocolatey\lib\zig\tools\zig-windows-x86_64-0.14.0\lib C:\DevCurrent\Zig-Env C:\DevCurrent\Zig-Env\.zig-cache C:\Users\atomi\AppData\Local\zig --seed 0x891b4ca5 -Zfc7e9a10d547b0b7 test --summary all

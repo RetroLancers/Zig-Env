@@ -119,6 +119,9 @@ pub fn build(b: *std.Build) void {
         "test/basic_parsing.zig",
         "test/quotes.zig",
         "test/escapes.zig",
+        "test/interpolation.zig",
+        "test/heredoc.zig",
+        "test/edge_cases.zig",
     };
 
     for (test_files) |test_file| {

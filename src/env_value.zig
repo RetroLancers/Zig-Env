@@ -29,6 +29,7 @@ pub const EnvValue = struct {
     // Buffer management
     buffer: std.ArrayList(u8),
     value_index: usize,
+    escaped_dollar_index: ?usize,
 
     pub fn init(allocator: std.mem.Allocator) EnvValue {
         return EnvValue{
@@ -54,6 +55,7 @@ pub const EnvValue = struct {
 
             .buffer = std.ArrayList(u8).init(allocator),
             .value_index = 0,
+            .escaped_dollar_index = null,
         };
     }
 
