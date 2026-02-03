@@ -22,6 +22,7 @@
     "src/reader.zig",
     "src/finalizer.zig",
     "src/memory.zig",
+    "src/reusable_buffer.zig",
     "build.zig",
     "Tasks/completed/01a_Basic_Data_Structures.md",
     "Tasks/completed/01b_Key_Value_Structures.md",

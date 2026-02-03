@@ -34,7 +34,7 @@ test "getWhiteSpaceOffsetLeft" {
     const value = "${ NAME}";
     // $ at 0, { at 1, ' ' at 2, N at 3
     var pos = VariablePosition.init(2, 1, 0);
-    
+
     // checks index 2 (' '), index 1 ('{'). returns 1.
     try std.testing.expectEqual(@as(usize, 1), getWhiteSpaceOffsetLeft(value, &pos));
 }
@@ -44,7 +44,7 @@ test "getWhiteSpaceOffsetRight" {
     // $ at 0, { at 1, N at 2, A at 3, M at 4, E at 5, ' ' at 6, } at 7
     var pos = VariablePosition.init(2, 1, 0);
     pos.end_brace = 7;
-    
+
     // checks index 6 (' '), index 5 ('E'). returns 1.
     try std.testing.expectEqual(@as(usize, 1), getWhiteSpaceOffsetRight(value, &pos));
 }

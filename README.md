@@ -73,7 +73,7 @@ pub fn main() !void {
 
 ## Building
 
-This project uses the Zig build system:
+This project requires **Zig 0.15.2**.
 
 ```bash
 # Build the library

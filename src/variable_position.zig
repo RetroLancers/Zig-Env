@@ -31,7 +31,7 @@ pub const VariablePosition = struct {
             }
         }
     }
-    
+
     pub fn setVariableStr(self: *VariablePosition, allocator: std.mem.Allocator, str: []const u8) !void {
         // If we already allocated specifically for this struct (not just pointing to memory), free it
         if (self.allocator) |old_alloc| {
@@ -39,7 +39,7 @@ pub const VariablePosition = struct {
                 old_alloc.free(self.variable_str);
             }
         }
-        
+
         self.variable_str = try allocator.dupe(u8, str);
         self.allocator = allocator;
     }
@@ -48,8 +48,8 @@ pub const VariablePosition = struct {
 test "VariablePosition initialization" {
     var pos = VariablePosition.init(0, 1, 2);
     // No allocator needed for init state if variable_str is empty string slice literal
-    defer pos.deinit(); 
-    
+    defer pos.deinit();
+
     try testing.expectEqual(@as(usize, 0), pos.variable_start);
     try testing.expectEqual(@as(usize, 1), pos.start_brace);
     try testing.expectEqual(@as(usize, 2), pos.dollar_sign);
@@ -61,10 +61,10 @@ test "VariablePosition initialization" {
 test "VariablePosition memory cleanup" {
     var pos = VariablePosition.init(10, 11, 12);
     defer pos.deinit();
-    
+
     const test_str = "MY_VAR";
     try pos.setVariableStr(testing.allocator, test_str);
-    
+
     try testing.expectEqualStrings(test_str, pos.variable_str);
     try testing.expect(pos.allocator != null);
 }

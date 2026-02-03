@@ -1,0 +1,20 @@
+{
+    "name": "Zig 0.15.2 Migration",
+    "description": "Files and tasks related to the Zig 0.15.2 migration and verification.",
+    "files": [
+        "build.zig",
+        "build.zig.zon",
+        "README.md",
+        "src/reusable_buffer.zig",
+        "src/env_key.zig",
+        "src/env_value.zig",
+        "src/reader.zig",
+        "src/memory.zig",
+        "src/finalizer.zig",
+        "Tasks/in_progress/14_verify_zig_0_15_compatibility.md",
+        "Tasks/completed/10_create_reusable_buffer.md",
+        "Tasks/completed/11_migrate_envkey_to_reusable_buffer.md",
+        "Tasks/completed/12_migrate_envvalue_to_reusable_buffer.md",
+        "Tasks/completed/13_migrate_remaining_arraylist_usage.md"
+    ]
+}
