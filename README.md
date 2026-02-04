@@ -47,13 +47,17 @@ Add `zigenv` to your `build.zig.zon`:
     .version = "0.1.0",
     .dependencies = .{
         .zigenv = .{
-            .url = "https://github.com/RetroLancers/Zig-Env/archive/refs/heads/main.tar.gz",
+            .url = "https://github.com/RetroLancers/Zig-Env/archive/refs/heads/release.tar.gz",
             // .hash = "...", // Add hash after first build
         },
     },
     .paths = .{ "" },
 }
 ```
+
+> [!NOTE]
+> Use the `release` branch for a stable version of the library. The `main` branch is used for active development and may contain breaking changes or experimental features.
+
 
 Then in your `build.zig`:
 
