@@ -1,0 +1,11 @@
+{
+    "name": "Bun Integration",
+    "description": "Files related to the Bun integration features, including parser extensions, interpolation logic, and memory verification.",
+    "files": [
+        "c:/DevCurrent/Zig-Env/Zig-Env/src/parser/read_key.zig",
+        "c:/DevCurrent/Zig-Env/Zig-Env/src/data/variable_position.zig",
+        "c:/DevCurrent/Zig-Env/Zig-Env/src/interpolation/finalizer.zig",
+        "c:/DevCurrent/Zig-Env/Zig-Env/src/env.zig",
+        "c:/DevCurrent/Zig-Env/Zig-Env/tests/bun_integration_memory_test.zig"
+    ]
+}
