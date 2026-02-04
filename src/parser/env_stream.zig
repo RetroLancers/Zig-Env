@@ -50,6 +50,22 @@ pub const EnvStream = struct {
         return char;
     }
 
+    // Peek at next char without advancing
+    pub fn peek(self: EnvStream) ?u8 {
+        if (self.index >= self.length) return null;
+        const char = self.data[self.index];
+
+        if (comptime is_windows) {
+            if (char == '\r') {
+                if (self.index + 1 < self.length and self.data[self.index + 1] == '\n') {
+                    return '\n';
+                }
+            }
+        }
+
+        return char;
+    }
+
     // Check if stream is valid
     pub fn good(self: EnvStream) bool {
         return self.is_good;
