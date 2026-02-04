@@ -8,6 +8,8 @@
         "src/data/env_value.zig",
         "src/data/env_pair.zig",
         "src/buffer/memory_utils.zig",
-        "Tasks/in_progress/27_REMOVE_ARRAYLIST_UNMANAGED_COMPLETELY.md"
+        "Tasks/in_progress/27_REMOVE_ARRAYLIST_UNMANAGED_COMPLETELY.md",
+        "tests/custom_lists_test.zig",
+        "Tasks/completed/28_test_coverage_lists_and_syntax.md"
     ]
 }

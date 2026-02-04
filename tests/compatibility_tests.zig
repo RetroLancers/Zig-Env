@@ -118,7 +118,8 @@ test "compat: export prefix from bash-style dotenv" {
 
     // Should parse with or without 'export' prefix
     // This may fail if export is not supported - that's okay
-    _ = env.get("KEY") orelse env.get("export");
+    // Should parse with 'export' prefix stripped
+    try testing.expectEqualStrings("value", env.get("KEY").?);
 }
 
 test "compat: equals in value from python-dotenv" {

@@ -20,10 +20,17 @@ pub fn readKey(stream: *EnvStream, key: *EnvKey) !ReadResult {
         switch (key_char) {
             ' ' => {
                 if (key.buffer.len == 0) continue; // left trim
+
+                // Handle "export" keyword (stripping "export " prefix)
+                if (key.buffer.len == 6 and std.mem.eql(u8, key.buffer.usedSlice(), "export")) {
+                    key.buffer.clearRetainingCapacity();
+                    continue;
+                }
+
                 try key.buffer.append(key_char);
             },
-            '=' => {
-                // If we are at EOF immediately after '=', we can't read value.
+            '=', ':' => {
+                // If we are at EOF immediately after '=' or ':', we can't read value.
                 if (stream.eof()) return ReadResult.end_of_stream_value;
                 return ReadResult.success;
             },
@@ -124,4 +131,41 @@ test "readKey EOF during key" {
 
     try testing.expectEqual(ReadResult.end_of_stream_key, result);
     try testing.expectEqualStrings("INCOMPLETE", key.key());
+}
+
+test "readKey with export prefix" {
+    var stream = EnvStream.init("export KEY=value");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit();
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.success, result);
+    try testing.expectEqualStrings("KEY", key.key());
+}
+
+test "readKey with colon separator" {
+    var stream = EnvStream.init("KEY:value");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit();
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.success, result);
+    try testing.expectEqualStrings("KEY", key.key());
+}
+
+test "readKey with colon and space" {
+    var stream = EnvStream.init("KEY: value");
+
+    var key = EnvKey.init(testing.allocator);
+    defer key.deinit();
+
+    const result = try readKey(&stream, &key);
+
+    try testing.expectEqual(ReadResult.success, result);
+    try testing.expectEqualStrings("KEY", key.key());
+    // The space after : is consumed by readValue usually, but readKey stops at :
 }

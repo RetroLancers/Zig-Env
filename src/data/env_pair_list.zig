@@ -62,16 +62,16 @@ pub const EnvPairList = struct {
             }
             // Ensure we grow enough to fit at least one more
             if (new_cap < self.items.len + 1) new_cap = self.items.len + 1;
-            
+
             try self.ensureTotalCapacity(new_cap);
         }
 
         // Access the backing array at the position of the new item
         const full_slice = self.items.ptr[0..self.capacity];
         full_slice[self.items.len] = item;
-        
+
         // Update items slice to include the new item
-        self.items = full_slice[0..self.items.len + 1];
+        self.items = full_slice[0 .. self.items.len + 1];
     }
 
     /// Clear the list but keep the memory allocated.
@@ -87,13 +87,13 @@ pub const EnvPairList = struct {
 test "EnvPairList basic usage" {
     const testing = std.testing;
     const allocator = testing.allocator;
-    
+
     var list = EnvPairList.init(allocator);
     defer list.deinit();
 
     var pair1 = EnvPair.init(allocator);
     // Add some data so we can verify cleanup
-    try pair1.key.setOwnBuffer(try allocator.dupe(u8, "key1"));
+    pair1.key.setOwnBuffer(try allocator.dupe(u8, "key1"));
     try list.append(pair1);
 
     try testing.expectEqual(@as(usize, 1), list.items.len);

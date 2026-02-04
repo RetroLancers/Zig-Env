@@ -70,7 +70,7 @@ pub const VariablePositionList = struct {
             // src:  items.ptr[index+1..items.len]
             const dest_slice = self.items.ptr[index..new_len];
             const src_slice = self.items.ptr[index + 1 .. self.items.len];
-            @memcpy(dest_slice, src_slice);
+            std.mem.copyForwards(VariablePosition, dest_slice, src_slice);
         }
         self.items = self.items.ptr[0..new_len];
         return item;

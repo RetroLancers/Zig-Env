@@ -50,6 +50,7 @@ pub fn build(b: *std.Build) void {
         "tests/compatibility_tests.zig",
         "tests/performance_regression_tests.zig",
         "tests/error_messages_tests.zig",
+        "tests/custom_lists_test.zig",
     };
 
     for (test_files) |test_file| {
