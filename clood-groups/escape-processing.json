@@ -4,7 +4,7 @@
     "files": [
         "src/parser/escape_processor.zig",
         "tests/escape_test.zig",
-        "Tasks/in_progress/24_expand_test_coverage.md",
+        "Tasks/completed/26_expand_test_coverage.md",
         "Tasks/completed/03a_Backslash_Escape_Processing.md",
         "src/buffer/buffer_utils.zig",
         "src/data/env_value.zig"

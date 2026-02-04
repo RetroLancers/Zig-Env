@@ -8,7 +8,7 @@
         "src/data/parser_options.zig",
         "tests/quote_test.zig",
         "tests/single_quote_heredoc_test.zig",
-        "Tasks/completed/18_single_quoted_heredocs.md",
-        "Tasks/in_progress/24_expand_test_coverage.md"
+        "tests/garbage_after_quote.zig",
+        "Tasks/completed/26_expand_test_coverage.md"
     ]
 }
