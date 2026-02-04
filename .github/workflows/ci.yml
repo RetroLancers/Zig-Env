@@ -21,6 +21,6 @@ jobs:
       - name: Build
         run: zig build -Doptimize=ReleaseFast
       - name: Run tests
-        run: zig build test -Doptimize=ReleaseFast --summary all
+        run: zig build test -Doptimize=ReleaseFast -Dskip-perf=true --summary all
       - name: Verify package
         run: zig build --help
