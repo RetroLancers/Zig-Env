@@ -1,6 +1,7 @@
 const std = @import("std");
 const zigenv = @import("zigenv");
 const testing = std.testing;
+const ManagedList = zigenv.ManagedList;
 
 test "stress: extremely long key (1KB)" {
     const allocator = testing.allocator;
@@ -39,17 +40,17 @@ test "stress: extremely long value (100KB)" {
 test "stress: many key-value pairs (1000)" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayListUnmanaged(u8){};
-    defer content.deinit(allocator);
+    var content = ManagedList(u8).init(allocator);
+    defer content.deinit();
 
     var i: usize = 0;
     while (i < 1000) : (i += 1) {
         const line = try std.fmt.allocPrint(allocator, "KEY{d}=value{d}\n", .{ i, i });
         defer allocator.free(line);
-        try content.appendSlice(allocator, line);
+        try content.appendSlice(line);
     }
 
-    var env = try zigenv.parseString(allocator, content.items);
+    var env = try zigenv.parseString(allocator, content.list.items);
     defer env.deinit();
 
     try testing.expectEqual(@as(usize, 1000), env.map.count());
@@ -107,17 +108,17 @@ test "stress: rapid allocation deallocation (100 iterations)" {
 test "stress: many empty values" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayListUnmanaged(u8){};
-    defer content.deinit(allocator);
+    var content = ManagedList(u8).init(allocator);
+    defer content.deinit();
 
     var i: usize = 0;
     while (i < 500) : (i += 1) {
         const line = try std.fmt.allocPrint(allocator, "KEY{d}=\n", .{i});
         defer allocator.free(line);
-        try content.appendSlice(allocator, line);
+        try content.appendSlice(line);
     }
 
-    var env = try zigenv.parseString(allocator, content.items);
+    var env = try zigenv.parseString(allocator, content.list.items);
     defer env.deinit();
 
     try testing.expectEqual(@as(usize, 500), env.map.count());
@@ -129,17 +130,17 @@ test "stress: many empty values" {
 test "stress: many duplicate keys" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayListUnmanaged(u8){};
-    defer content.deinit(allocator);
+    var content = ManagedList(u8).init(allocator);
+    defer content.deinit();
 
     var i: usize = 0;
     while (i < 100) : (i += 1) {
         const line = try std.fmt.allocPrint(allocator, "DUPLICATE=value{d}\n", .{i});
         defer allocator.free(line);
-        try content.appendSlice(allocator, line);
+        try content.appendSlice(line);
     }
 
-    var env = try zigenv.parseString(allocator, content.items);
+    var env = try zigenv.parseString(allocator, content.list.items);
     defer env.deinit();
 
     // Last one should win
@@ -150,8 +151,8 @@ test "stress: many duplicate keys" {
 test "stress: mixed line ending styles (500 lines)" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayListUnmanaged(u8){};
-    defer content.deinit(allocator);
+    var content = ManagedList(u8).init(allocator);
+    defer content.deinit();
 
     var i: usize = 0;
     while (i < 500) : (i += 1) {
@@ -162,10 +163,10 @@ test "stress: mixed line ending styles (500 lines)" {
         };
         const line = try std.fmt.allocPrint(allocator, "KEY{d}=value{d}{s}", .{ i, i, ending });
         defer allocator.free(line);
-        try content.appendSlice(allocator, line);
+        try content.appendSlice(line);
     }
 
-    var env = try zigenv.parseString(allocator, content.items);
+    var env = try zigenv.parseString(allocator, content.list.items);
     defer env.deinit();
 
     // Should parse all lines correctly

@@ -3,15 +3,17 @@ const EnvPair = @import("../data/env_pair.zig").EnvPair;
 const FinalizeResult = @import("../data/read_result.zig").FinalizeResult;
 const VariablePosition = @import("../data/variable_position.zig").VariablePosition;
 
+const EnvPairList = @import("../data/env_pair_list.zig").EnvPairList;
+
 /// Finalizes all values in the provided list of pairs.
-pub fn finalizeAllValues(allocator: std.mem.Allocator, pairs: *std.ArrayListUnmanaged(EnvPair)) !void {
+pub fn finalizeAllValues(allocator: std.mem.Allocator, pairs: *EnvPairList) !void {
     for (pairs.items) |*pair| {
         _ = try finalizeValue(allocator, pair, pairs);
     }
 }
 
 /// Recursively finalizes a single value, resolving all variable interpolations.
-pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *std.ArrayListUnmanaged(EnvPair)) !FinalizeResult {
+pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *EnvPairList) !FinalizeResult {
     if (pair.value.is_already_interpolated) {
         return .copied;
     }
@@ -60,7 +62,7 @@ pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *std.A
     return if (result_status == .interpolated) .interpolated else .copied;
 }
 
-fn findPairByKey(pairs: *std.ArrayListUnmanaged(EnvPair), key: []const u8) ?*EnvPair {
+fn findPairByKey(pairs: *EnvPairList, key: []const u8) ?*EnvPair {
     for (pairs.items) |*pair| {
         if (std.mem.eql(u8, pair.key.key(), key)) {
             return pair;
@@ -96,10 +98,9 @@ fn replaceInterpolation(allocator: std.mem.Allocator, pair: *EnvPair, interp_idx
 
 test "finalizeValue - basic substitution" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayListUnmanaged(EnvPair){};
+    var pairs = EnvPairList.init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit();
-        pairs.deinit(allocator);
+        pairs.deinit();
     }
 
     var p1 = EnvPair.init(allocator);
@@ -108,7 +109,7 @@ test "finalizeValue - basic substitution" {
     p1.key.setOwnBuffer(k1);
     const v1 = try allocator.dupe(u8, "hello");
     p1.value.setOwnBuffer(v1);
-    try pairs.append(allocator, p1);
+    try pairs.append(p1);
 
     var p2 = EnvPair.init(allocator);
     const k2 = try allocator.dupe(u8, "REF");
@@ -119,8 +120,8 @@ test "finalizeValue - basic substitution" {
     var vp_ref = VariablePosition.init(0, 1, 0);
     vp_ref.end_brace = 5;
     try vp_ref.setVariableStr(allocator, "VAR");
-    try p2.value.interpolations.append(allocator, vp_ref);
-    try pairs.append(allocator, p2);
+    try p2.value.interpolations.append(vp_ref);
+    try pairs.append(p2);
 
     const res = try finalizeValue(allocator, &pairs.items[1], &pairs);
     try std.testing.expect(res == .interpolated);
@@ -129,10 +130,9 @@ test "finalizeValue - basic substitution" {
 
 test "finalizeValue - recursive substitution" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayListUnmanaged(EnvPair){};
+    var pairs = EnvPairList.init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit();
-        pairs.deinit(allocator);
+        pairs.deinit();
     }
 
     // A=${B}
@@ -142,8 +142,8 @@ test "finalizeValue - recursive substitution" {
     var vp_a1 = VariablePosition.init(0, 1, 0);
     vp_a1.end_brace = 3;
     try vp_a1.setVariableStr(allocator, "B");
-    try p1.value.interpolations.append(allocator, vp_a1);
-    try pairs.append(allocator, p1);
+    try p1.value.interpolations.append(vp_a1);
+    try pairs.append(p1);
 
     // B=${C}
     var p2 = EnvPair.init(allocator);
@@ -152,14 +152,14 @@ test "finalizeValue - recursive substitution" {
     var vp_b1 = VariablePosition.init(0, 1, 0);
     vp_b1.end_brace = 3;
     try vp_b1.setVariableStr(allocator, "C");
-    try p2.value.interpolations.append(allocator, vp_b1);
-    try pairs.append(allocator, p2);
+    try p2.value.interpolations.append(vp_b1);
+    try pairs.append(p2);
 
     // C=final
     var p3 = EnvPair.init(allocator);
     p3.key.setOwnBuffer(try allocator.dupe(u8, "C"));
     p3.value.setOwnBuffer(try allocator.dupe(u8, "final"));
-    try pairs.append(allocator, p3);
+    try pairs.append(p3);
 
     const res = try finalizeValue(allocator, &pairs.items[0], &pairs);
     try std.testing.expect(res == .interpolated);
@@ -169,10 +169,9 @@ test "finalizeValue - recursive substitution" {
 
 test "finalizeValue - circular dependency" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayListUnmanaged(EnvPair){};
+    var pairs = EnvPairList.init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit();
-        pairs.deinit(allocator);
+        pairs.deinit();
     }
 
     // A=${B}
@@ -182,8 +181,8 @@ test "finalizeValue - circular dependency" {
     var vp_a2 = VariablePosition.init(0, 1, 0);
     vp_a2.end_brace = 3;
     try vp_a2.setVariableStr(allocator, "B");
-    try p1.value.interpolations.append(allocator, vp_a2);
-    try pairs.append(allocator, p1);
+    try p1.value.interpolations.append(vp_a2);
+    try pairs.append(p1);
 
     // B=${A}
     var p2 = EnvPair.init(allocator);
@@ -192,8 +191,8 @@ test "finalizeValue - circular dependency" {
     var vp_b2 = VariablePosition.init(0, 1, 0);
     vp_b2.end_brace = 3;
     try vp_b2.setVariableStr(allocator, "A");
-    try p2.value.interpolations.append(allocator, vp_b2);
-    try pairs.append(allocator, p2);
+    try p2.value.interpolations.append(vp_b2);
+    try pairs.append(p2);
 
     const res = try finalizeValue(allocator, &pairs.items[0], &pairs);
     // When circular, it should return circular and keep the original string
@@ -203,10 +202,9 @@ test "finalizeValue - circular dependency" {
 
 test "finalizeValue - missing variable" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayListUnmanaged(EnvPair){};
+    var pairs = EnvPairList.init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit();
-        pairs.deinit(allocator);
+        pairs.deinit();
     }
 
     var p1 = EnvPair.init(allocator);
@@ -215,8 +213,8 @@ test "finalizeValue - missing variable" {
     var vp_missing = VariablePosition.init(0, 1, 0);
     vp_missing.end_brace = 9;
     try vp_missing.setVariableStr(allocator, "MISSING");
-    try p1.value.interpolations.append(allocator, vp_missing);
-    try pairs.append(allocator, p1);
+    try p1.value.interpolations.append(vp_missing);
+    try pairs.append(p1);
 
     const res = try finalizeValue(allocator, &pairs.items[0], &pairs);
     try std.testing.expect(res == .copied);
@@ -225,21 +223,20 @@ test "finalizeValue - missing variable" {
 
 test "finalizeValue - multiple interpolations in reverse order" {
     const allocator = std.testing.allocator;
-    var pairs = std.ArrayListUnmanaged(EnvPair){};
+    var pairs = EnvPairList.init(allocator);
     defer {
-        for (pairs.items) |*p| p.deinit();
-        pairs.deinit(allocator);
+        pairs.deinit();
     }
 
     var p1 = EnvPair.init(allocator);
     p1.key.setOwnBuffer(try allocator.dupe(u8, "A"));
     p1.value.setOwnBuffer(try allocator.dupe(u8, "1"));
-    try pairs.append(allocator, p1);
+    try pairs.append(p1);
 
     var p2 = EnvPair.init(allocator);
     p2.key.setOwnBuffer(try allocator.dupe(u8, "B"));
     p2.value.setOwnBuffer(try allocator.dupe(u8, "2"));
-    try pairs.append(allocator, p2);
+    try pairs.append(p2);
 
     var p3 = EnvPair.init(allocator);
     p3.key.setOwnBuffer(try allocator.dupe(u8, "C"));
@@ -247,12 +244,12 @@ test "finalizeValue - multiple interpolations in reverse order" {
     var vp_a = VariablePosition.init(0, 1, 0);
     vp_a.end_brace = 3;
     try vp_a.setVariableStr(allocator, "A");
-    try p3.value.interpolations.append(allocator, vp_a); // ${A}
+    try p3.value.interpolations.append(vp_a); // ${A}
     var vp_b = VariablePosition.init(4, 5, 4);
     vp_b.end_brace = 7;
     try vp_b.setVariableStr(allocator, "B");
-    try p3.value.interpolations.append(allocator, vp_b); // ${B}
-    try pairs.append(allocator, p3);
+    try p3.value.interpolations.append(vp_b); // ${B}
+    try pairs.append(p3);
 
     const res = try finalizeValue(allocator, &pairs.items[2], &pairs);
     try std.testing.expect(res == .interpolated);

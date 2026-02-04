@@ -1,6 +1,7 @@
 const std = @import("std");
 const zigenv = @import("zigenv");
 const testing = std.testing;
+const ManagedList = zigenv.ManagedList;
 
 test "perf: simple file parse time benchmark" {
     const allocator = testing.allocator;
@@ -26,19 +27,19 @@ test "perf: simple file parse time benchmark" {
 test "perf: large file parse performance (1000 entries)" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayListUnmanaged(u8){};
-    defer content.deinit(allocator);
+    var content = ManagedList(u8).init(allocator);
+    defer content.deinit();
 
     var i: usize = 0;
     while (i < 1000) : (i += 1) {
         const line = try std.fmt.allocPrint(allocator, "KEY{d}=value{d}\n", .{ i, i });
         defer allocator.free(line);
-        try content.appendSlice(allocator, line);
+        try content.appendSlice(line);
     }
 
     var timer = try std.time.Timer.start();
 
-    var env = try zigenv.parseString(allocator, content.items);
+    var env = try zigenv.parseString(allocator, content.list.items);
     defer env.deinit();
 
     const elapsed = timer.read();
@@ -51,26 +52,26 @@ test "perf: large file parse performance (1000 entries)" {
 test "perf: interpolation performance" {
     const allocator = testing.allocator;
 
-    var content = std.ArrayListUnmanaged(u8){};
-    defer content.deinit(allocator);
+    var content = ManagedList(u8).init(allocator);
+    defer content.deinit();
 
-    try content.appendSlice(allocator, "BASE=value\n");
+    try content.appendSlice("BASE=value\n");
 
     // Create chain of interpolations
     var i: usize = 0;
     while (i < 100) : (i += 1) {
         if (i == 0) {
-            try content.appendSlice(allocator, "VAR0=${BASE}\n");
+            try content.appendSlice("VAR0=${BASE}\n");
         } else {
             const line = try std.fmt.allocPrint(allocator, "VAR{d}=${{VAR{d}}}\n", .{ i, i - 1 });
             defer allocator.free(line);
-            try content.appendSlice(allocator, line);
+            try content.appendSlice(line);
         }
     }
 
     var timer = try std.time.Timer.start();
 
-    var env = try zigenv.parseString(allocator, content.items);
+    var env = try zigenv.parseString(allocator, content.list.items);
     defer env.deinit();
 
     const elapsed = timer.read();

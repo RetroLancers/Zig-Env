@@ -41,7 +41,7 @@ pub fn parseStringWithOptions(allocator: Allocator, content: []const u8, options
     var stream = EnvStream.init(content);
     // Use hints to initialize buffers with appropriate capacity
     var pairs = try read_pair.readPairsWithHints(allocator, &stream, hints, options);
-    errdefer memory.deletePairs(allocator, &pairs);
+    errdefer memory.deletePairs(&pairs);
 
     try finalizer.finalizeAllValues(allocator, &pairs);
 
@@ -62,10 +62,7 @@ pub fn parseStringWithOptions(allocator: Allocator, content: []const u8, options
     }
 
     // Clean up pair structures (interpolations, etc.) but buffers are already emptied by toOwnedSlice
-    for (pairs.items) |*pair| {
-        pair.deinit();
-    }
-    pairs.deinit(allocator);
+    pairs.deinit();
 
     return env;
 }

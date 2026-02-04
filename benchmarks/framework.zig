@@ -1,5 +1,7 @@
 const std = @import("std");
 const stats = @import("statistics.zig");
+const zigenv = @import("zigenv");
+const ManagedList = zigenv.ManagedList;
 
 pub const BenchmarkResult = struct {
     name: []const u8,
@@ -33,8 +35,8 @@ pub fn benchmark(
         try func(allocator);
     }
 
-    var samples = try std.ArrayListUnmanaged(u64).initCapacity(allocator, config.measurement_iterations);
-    defer samples.deinit(allocator);
+    var samples = try ManagedList(u64).initCapacity(allocator, config.measurement_iterations);
+    defer samples.deinit();
 
     var total_time_ns: u64 = 0;
     var iterations: usize = 0;
@@ -45,11 +47,11 @@ pub fn benchmark(
         timer.reset();
         try func(allocator);
         const duration = timer.read();
-        try samples.append(allocator, duration);
+        try samples.append(duration);
         total_time_ns += duration;
     }
 
-    const slice = samples.items;
+    const slice = samples.list.items;
     std.mem.sort(u64, slice, {}, std.sort.asc(u64));
 
     const mean = stats.calculateMean(slice);
@@ -85,8 +87,8 @@ pub fn benchmarkWithSetup(
         try runFn(context, allocator);
     }
 
-    var samples = try std.ArrayListUnmanaged(u64).initCapacity(allocator, config.measurement_iterations);
-    defer samples.deinit(allocator);
+    var samples = try ManagedList(u64).initCapacity(allocator, config.measurement_iterations);
+    defer samples.deinit();
 
     var total_time_ns: u64 = 0;
     var iterations: usize = 0;
@@ -100,11 +102,11 @@ pub fn benchmarkWithSetup(
         try runFn(context, allocator);
         const duration = timer.read();
 
-        try samples.append(allocator, duration);
+        try samples.append(duration);
         total_time_ns += duration;
     }
 
-    const slice = samples.items;
+    const slice = samples.list.items;
     std.mem.sort(u64, slice, {}, std.sort.asc(u64));
 
     const mean = stats.calculateMean(slice);

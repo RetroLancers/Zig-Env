@@ -1,0 +1,13 @@
+{
+    "name": "Custom Collections",
+    "description": "Custom data structures replacing standard library types for performance/control",
+    "files": [
+        "src/data/env_pair_list.zig",
+        "src/data/variable_position_list.zig",
+        "src/data/managed_list.zig",
+        "src/data/env_value.zig",
+        "src/data/env_pair.zig",
+        "src/buffer/memory_utils.zig",
+        "Tasks/in_progress/27_REMOVE_ARRAYLIST_UNMANAGED_COMPLETELY.md"
+    ]
+}

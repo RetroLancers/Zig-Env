@@ -11,6 +11,9 @@ pub const ReadResult = @import("data/read_result.zig").ReadResult;
 // Re-export read_result.zig might have it.
 pub const file_scanner = @import("parser/file_scanner.zig");
 pub const ParserOptions = @import("data/parser_options.zig").ParserOptions;
+pub const ManagedList = @import("data/managed_list.zig").ManagedList;
+pub const EnvPairList = @import("data/env_pair_list.zig").EnvPairList;
+pub const VariablePositionList = @import("data/variable_position_list.zig").VariablePositionList;
 
 // Public API from lib.zig (which is still in src/)
 pub const parse = @import("lib.zig").parse;
@@ -66,4 +69,7 @@ test {
     _ = @import("parser/file_scanner.zig");
     _ = @import("data/parser_options.zig");
     _ = @import("data/env.zig");
+    _ = @import("data/managed_list.zig");
+    _ = @import("data/env_pair_list.zig");
+    _ = @import("data/variable_position_list.zig");
 }

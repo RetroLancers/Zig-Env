@@ -3,6 +3,7 @@ const EnvStream = @import("env_stream.zig").EnvStream;
 const EnvPair = @import("../data/env_pair.zig").EnvPair;
 const ParserOptions = @import("../data/parser_options.zig").ParserOptions;
 const ReadResult = @import("../data/read_result.zig").ReadResult;
+const EnvPairList = @import("../data/env_pair_list.zig").EnvPairList;
 const readKey = @import("read_key.zig").readKey;
 const readValue = @import("read_value.zig").readValue;
 const interpolation = @import("../interpolation/interpolation.zig");
@@ -64,13 +65,13 @@ pub fn readPairsWithHints(
     stream: *EnvStream,
     hints: file_scanner.BufferSizeHints,
     options: ParserOptions,
-) !std.ArrayListUnmanaged(EnvPair) {
+) !EnvPairList {
     // Pre-allocate capacity if we have a pair count estimate
-    var pairs = std.ArrayListUnmanaged(EnvPair){};
+    var pairs = EnvPairList.init(allocator);
     if (hints.estimated_pair_count > 0) {
-        try pairs.ensureTotalCapacity(allocator, hints.estimated_pair_count);
+        try pairs.ensureTotalCapacity(hints.estimated_pair_count);
     }
-    errdefer memory.deletePairs(allocator, &pairs);
+    errdefer memory.deletePairs(&pairs);
 
     // Use a scratch pair to minimize allocations
     var scratch_pair = try EnvPair.initWithCapacity(
@@ -121,7 +122,7 @@ pub fn readPairsWithHints(
                         new_interp.allocator = null;
                     }
 
-                    try new_pair.value.interpolations.append(allocator, new_interp);
+                    try new_pair.value.interpolations.append(new_interp);
                 }
             }
 
@@ -131,7 +132,7 @@ pub fn readPairsWithHints(
             // ... copy other relevant flags if needed by consumer?
             // Usually only quoted status matters for later processing.
 
-            try pairs.append(allocator, new_pair);
+            try pairs.append(new_pair);
 
             if (result == ReadResult.end_of_stream_value) break;
             continue;
@@ -146,7 +147,7 @@ pub fn readPairsWithHints(
     return pairs;
 }
 
-pub fn readPairsWithOptions(allocator: std.mem.Allocator, stream: *EnvStream, options: ParserOptions) !std.ArrayListUnmanaged(EnvPair) {
+pub fn readPairsWithOptions(allocator: std.mem.Allocator, stream: *EnvStream, options: ParserOptions) !EnvPairList {
     // Use default hints (0 capacity = start small)
     const default_hints = file_scanner.BufferSizeHints{
         .max_key_size = 0,
@@ -156,7 +157,7 @@ pub fn readPairsWithOptions(allocator: std.mem.Allocator, stream: *EnvStream, op
     return readPairsWithHints(allocator, stream, default_hints, options);
 }
 
-pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !std.ArrayListUnmanaged(EnvPair) {
+pub fn readPairs(allocator: std.mem.Allocator, stream: *EnvStream) !EnvPairList {
     return readPairsWithOptions(allocator, stream, ParserOptions.defaults());
 }
 
@@ -219,10 +220,8 @@ test "readPairs multiple pairs" {
 
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
-        for (pairs.items) |*pair| {
-            pair.deinit();
-        }
-        pairs.deinit(testing.allocator);
+        // Pairs handles cleanup of items
+        pairs.deinit();
     }
 
     try testing.expectEqual(@as(usize, 3), pairs.items.len);
@@ -239,10 +238,7 @@ test "readPairs with comments" {
 
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
-        for (pairs.items) |*pair| {
-            pair.deinit();
-        }
-        pairs.deinit(testing.allocator);
+        pairs.deinit();
     }
 
     try testing.expectEqual(@as(usize, 2), pairs.items.len);
@@ -255,10 +251,7 @@ test "readPairs with empty lines" {
 
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
-        for (pairs.items) |*pair| {
-            pair.deinit();
-        }
-        pairs.deinit(testing.allocator);
+        pairs.deinit();
     }
 
     // Empty lines should be skipped as fail (in loop) or handled
@@ -270,10 +263,7 @@ test "readPairs windows line endings" {
 
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
-        for (pairs.items) |*pair| {
-            pair.deinit();
-        }
-        pairs.deinit(testing.allocator);
+        pairs.deinit();
     }
 
     try testing.expectEqual(@as(usize, 2), pairs.items.len);
@@ -286,10 +276,7 @@ test "readPairs empty stream" {
 
     var pairs = try readPairs(testing.allocator, &stream);
     defer {
-        for (pairs.items) |*pair| {
-            pair.deinit();
-        }
-        pairs.deinit(testing.allocator);
+        pairs.deinit();
     }
 
     try testing.expectEqual(@as(usize, 0), pairs.items.len);

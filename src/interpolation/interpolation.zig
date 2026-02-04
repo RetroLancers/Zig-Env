@@ -54,7 +54,7 @@ pub fn openVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
         // var_start (where variable name starts) is buffer.len.
         const new_pos = VariablePosition.init(value.buffer.len, value.buffer.len - 1, dollar_pos);
 
-        try value.interpolations.append(value.buffer.allocator, new_pos);
+        try value.interpolations.append(new_pos);
     }
 }
 
@@ -74,7 +74,7 @@ pub fn openBracelessVariable(allocator: std.mem.Allocator, value: *EnvValue) !vo
     // variable_start is where the current char will be written (buffer.len),
     const new_pos = VariablePosition.init(value.buffer.len, dollar_pos, dollar_pos);
 
-    try value.interpolations.append(value.buffer.allocator, new_pos);
+    try value.interpolations.append(new_pos);
 }
 
 /// Called when `}` is encountered; finalize the current variable interpolation.

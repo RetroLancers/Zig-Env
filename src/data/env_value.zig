@@ -1,9 +1,10 @@
 const std = @import("std");
 const VariablePosition = @import("variable_position.zig").VariablePosition;
+const VariablePositionList = @import("variable_position_list.zig").VariablePositionList;
 const ReusableBuffer = @import("../buffer/reusable_buffer.zig").ReusableBuffer;
 
 pub const EnvValue = struct {
-    interpolations: std.ArrayListUnmanaged(VariablePosition),
+    interpolations: VariablePositionList,
 
     // Parsing state
     is_parsing_variable: bool,
@@ -33,7 +34,7 @@ pub const EnvValue = struct {
 
     pub fn init(allocator: std.mem.Allocator) EnvValue {
         return EnvValue{
-            .interpolations = .{},
+            .interpolations = VariablePositionList.init(allocator),
 
             .is_parsing_variable = false,
             .is_parsing_braceless_variable = false,
@@ -59,9 +60,6 @@ pub const EnvValue = struct {
     }
 
     pub fn clear(self: *EnvValue) void {
-        for (self.interpolations.items) |*item| {
-            item.deinit();
-        }
         self.interpolations.clearRetainingCapacity();
 
         self.is_parsing_variable = false;
@@ -94,10 +92,7 @@ pub const EnvValue = struct {
     }
 
     pub fn deinit(self: *EnvValue) void {
-        for (self.interpolations.items) |*item| {
-            item.deinit();
-        }
-        self.interpolations.deinit(self.buffer.allocator);
+        self.interpolations.deinit();
         self.buffer.deinit();
     }
 
@@ -162,7 +157,7 @@ test "EnvValue interpolations" {
     var val = EnvValue.init(allocator);
     defer val.deinit();
 
-    try val.interpolations.append(allocator, VariablePosition.init(0, 0, 0));
+    try val.interpolations.append(VariablePosition.init(0, 0, 0));
 
     try std.testing.expect(val.interpolations.items.len == 1);
 }

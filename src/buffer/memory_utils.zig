@@ -1,6 +1,6 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const ArrayListUnmanaged = std.ArrayListUnmanaged;
+const EnvPairList = @import("../data/env_pair_list.zig").EnvPairList;
 const EnvPair = @import("../data/env_pair.zig").EnvPair;
 
 /// Clean up all memory for a single EnvPair
@@ -13,17 +13,14 @@ pub fn deletePair(allocator: Allocator, pair: *EnvPair) void {
 }
 
 /// Clean up all pairs in the list
-pub fn deletePairs(allocator: Allocator, pairs: *ArrayListUnmanaged(EnvPair)) void {
-    for (pairs.items) |*pair| {
-        pair.deinit();
-    }
-    pairs.deinit(allocator);
+pub fn deletePairs(pairs: *EnvPairList) void {
+    pairs.deinit();
 }
 
 test "deletePairs cleans up everything" {
     const allocator = std.testing.allocator;
-    var pairs = ArrayListUnmanaged(EnvPair){};
-    // errdefer deletePairs(allocator, &pairs); // In case of failure in this test
+    var pairs = EnvPairList.init(allocator);
+    // errdefer deletePairs(&pairs); // In case of failure in this test
 
     // Create some pairs with owned buffers
     var i: usize = 0;
@@ -40,11 +37,11 @@ test "deletePairs cleans up everything" {
         vbuf[6] = @intCast('0' + i);
         pair.value.setOwnBuffer(vbuf);
 
-        try pairs.append(allocator, pair);
+        try pairs.append(pair);
     }
 
     // deletePairs should clean up all buffers and the list itself
-    deletePairs(allocator, &pairs);
+    deletePairs(&pairs);
 
     // std.testing.allocator will detect leaks at the end of the test
 }

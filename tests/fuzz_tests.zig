@@ -1,6 +1,7 @@
 const std = @import("std");
 const zigenv = @import("zigenv");
 const testing = std.testing;
+const ManagedList = zigenv.ManagedList;
 
 test "fuzz: random byte sequences (100 iterations)" {
     const allocator = testing.allocator;
@@ -76,8 +77,8 @@ test "fuzz: random key-value structure" {
     var prng = std.Random.DefaultPrng.init(45);
     const random = prng.random();
 
-    var content = std.ArrayListUnmanaged(u8){};
-    defer content.deinit(allocator);
+    var content = ManagedList(u8).init(allocator);
+    defer content.deinit();
 
     var i: usize = 0;
     while (i < 20) : (i += 1) {
@@ -94,22 +95,22 @@ test "fuzz: random key-value structure" {
             var k: usize = 0;
             while (k < key_len) : (k += 1) {
                 const ch = random.intRangeAtMost(u8, 'A', 'Z');
-                try content.append(allocator, ch);
+                try content.append(ch);
             }
 
-            try content.append(allocator, '=');
+            try content.append('=');
 
             // Random value
             var v: usize = 0;
             while (v < val_len) : (v += 1) {
                 const ch = random.intRangeAtMost(u8, 32, 126);
-                try content.append(allocator, ch);
+                try content.append(ch);
             }
 
-            try content.append(allocator, '\n');
+            try content.append('\n');
         }
 
-        if (zigenv.parseString(allocator, content.items)) |env_result| {
+        if (zigenv.parseString(allocator, content.list.items)) |env_result| {
             var env = env_result;
             env.deinit();
         } else |_| {
@@ -127,28 +128,28 @@ test "fuzz: random quote patterns" {
 
     var i: usize = 0;
     while (i < 50) : (i += 1) {
-        var content = std.ArrayListUnmanaged(u8){};
-        defer content.deinit(allocator);
+        var content = ManagedList(u8).init(allocator);
+        defer content.deinit();
 
-        try content.appendSlice(allocator, "KEY=");
+        try content.appendSlice("KEY=");
 
         // Random quote type
         const quote = quotes[random.intRangeAtMost(usize, 0, quotes.len - 1)];
-        try content.append(allocator, quote);
+        try content.append(quote);
 
         // Random content
         const content_len = random.intRangeAtMost(usize, 0, 20);
         var j: usize = 0;
         while (j < content_len) : (j += 1) {
-            try content.append(allocator, random.intRangeAtMost(u8, 'a', 'z'));
+            try content.append(random.intRangeAtMost(u8, 'a', 'z'));
         }
 
         // Maybe close quote
         if (random.boolean()) {
-            try content.append(allocator, quote);
+            try content.append(quote);
         }
 
-        if (zigenv.parseString(allocator, content.items)) |env_result| {
+        if (zigenv.parseString(allocator, content.list.items)) |env_result| {
             var env = env_result;
             env.deinit();
         } else |_| {
