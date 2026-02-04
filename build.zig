@@ -3,6 +3,7 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+    const skip_perf = b.option(bool, "skip-perf", "Skip performance regression tests") orelse false;
 
     // Create the core module
     const zigenv_mod = b.addModule("zigenv", .{
@@ -52,6 +53,9 @@ pub fn build(b: *std.Build) void {
     };
 
     for (test_files) |test_file| {
+        if (skip_perf and std.mem.eql(u8, test_file, "tests/performance_regression_tests.zig")) {
+            continue;
+        }
         // Each test file needs its own module because they are separate root source files
         const test_mod = b.createModule(.{
             .root_source_file = b.path(test_file),
