@@ -21,9 +21,17 @@ const AllocationStats = struct {
     }
 };
 
+/// TrackingAllocator wraps another allocator to count allocations
 const TrackingAllocator = struct {
     parent: std.mem.Allocator,
     stats: AllocationStats = .{},
+
+    const vtable: std.mem.Allocator.VTable = .{
+        .alloc = alloc,
+        .resize = resize,
+        .remap = remap,
+        .free = free,
+    };
 
     pub fn init(parent: std.mem.Allocator) TrackingAllocator {
         return .{ .parent = parent };
@@ -32,12 +40,7 @@ const TrackingAllocator = struct {
     pub fn allocator(self: *TrackingAllocator) std.mem.Allocator {
         return .{
             .ptr = self,
-            .vtable = &.{
-                .alloc = alloc,
-                .resize = resize,
-                .remap = remap,
-                .free = free,
-            },
+            .vtable = &vtable,
         };
     }
 
@@ -75,6 +78,8 @@ const TrackingAllocator = struct {
 
     fn remap(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, new_len: usize, ret_addr: usize) ?[*]u8 {
         const self: *TrackingAllocator = @ptrCast(@alignCast(ctx));
+        // Simply delegate to parent's remap - we don't have access to rawRemap
+        // For now, return null to force fallback allocation behavior
         _ = self;
         _ = buf;
         _ = alignment;
@@ -91,6 +96,10 @@ const TrackingAllocator = struct {
             self.stats.current_bytes -= buf.len;
         }
         self.parent.rawFree(buf, alignment, ret_addr);
+    }
+
+    pub fn reset(self: *TrackingAllocator) void {
+        self.stats.reset();
     }
 };
 
@@ -111,7 +120,7 @@ pub fn main() !void {
     while (i < count) : (i += 1) {
         try content_buf.writer().print("KEY_{d}=VALUE_{d}\n", .{ i, i });
     }
-    const content = content_buf.items;
+    const content = content_buf.items();
 
     // Benchmark parse
     {

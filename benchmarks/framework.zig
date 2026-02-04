@@ -33,7 +33,7 @@ pub fn benchmark(
         try func(allocator);
     }
 
-    var samples = try std.ArrayList(u64).initCapacity(allocator, config.measurement_iterations);
+    var samples = try std.ArrayListUnmanaged(u64).initCapacity(allocator, config.measurement_iterations);
     defer samples.deinit(allocator);
 
     var total_time_ns: u64 = 0;
@@ -85,7 +85,7 @@ pub fn benchmarkWithSetup(
         try runFn(context, allocator);
     }
 
-    var samples = try std.ArrayList(u64).initCapacity(allocator, config.measurement_iterations);
+    var samples = try std.ArrayListUnmanaged(u64).initCapacity(allocator, config.measurement_iterations);
     defer samples.deinit(allocator);
 
     var total_time_ns: u64 = 0;
