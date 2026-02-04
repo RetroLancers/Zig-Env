@@ -47,15 +47,15 @@ pub fn finalizeValue(
     var found_circular = false;
 
     // Process interpolations.
-    // We use forward iteration (always taking the first item) because for NESTED interpolations (e.g. ${A${B}})
-    // we must process inner ones first. The list is typically ordered [Inner, Outer] or [First, Second].
-    // If [First, Second] (Sequential), processing First updates indices of Second.
-    // If [Inner, Outer] (Nested), processing Inner updates indices of Outer.
-    // This approach correctly handles both cases by dynamically updating the indices of remaining items.
+    // We use reverse iteration (taking the last item) because:
+    // 1. For NESTED interpolations (e.g. ${A${B}}), the list is ordered [Outer, Inner].
+    //    We must process Inner first. Inner is at the end.
+    // 2. For SEQUENTIAL interpolations (e.g. ${A}${B}), the list is ordered [First, Second].
+    //    Processing Second first (Right-to-Left) simplifies index updates (indices of First are unaffected).
     while (pair.value.interpolations.items.len > 0) {
-        // We handle item at index 0
-        const interp_idx = 0;
-        // Optimization: peek item 0
+        // We handle the last item
+        const interp_idx = pair.value.interpolations.items.len - 1;
+        // Optimization: peek item
         const interp = pair.value.interpolations.items[interp_idx];
 
         // Store range data to identify which subsequent items to update

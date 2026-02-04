@@ -91,3 +91,24 @@ test "Bun Integration: mixed features stress test" {
     try testing.expectEqualStrings("http://localhost:8080", env.get("URL").?);
     try testing.expectEqualStrings("5000", env.get("TIMEOUT").?);
 }
+
+test "Bun Integration: whitespace in interpolation" {
+    const allocator = testing.allocator;
+    const content =
+        \\VAR=value
+        \\A=${ VAR }
+        \\B=${  VAR  }
+        \\C=${VAR       }
+        \\D=${       VAR}
+        \\MISSING=${  UNKNOWN  :-  default  }
+    ;
+
+    var env = try zigenv.parseString(allocator, content);
+    defer env.deinit();
+
+    try testing.expectEqualStrings("value", env.get("A").?);
+    try testing.expectEqualStrings("value", env.get("B").?);
+    try testing.expectEqualStrings("value", env.get("C").?);
+    try testing.expectEqualStrings("value", env.get("D").?);
+    try testing.expectEqualStrings("  default  ", env.get("MISSING").?); // Defaults might preserve whitespace in value part?
+}
