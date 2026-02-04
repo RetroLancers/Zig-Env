@@ -44,13 +44,16 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, op
         // Variables enabled only if not in single quotes/triple single quotes
         if (!value.quoted and !value.triple_quoted) {
             // Check if we have a $ in the buffer (and it wasn't escaped)
-            if (value.value_index > 0 and value.value[value.value_index - 1] == '$') {
-                const dollar_idx = value.value_index - 1;
-                const is_escaped_dollar = if (value.escaped_dollar_index) |idx| idx == dollar_idx else false;
+            if (value.buffer.len > 0) {
+                const items = value.value();
+                if (items[items.len - 1] == '$') {
+                    const dollar_idx = value.buffer.len - 1;
+                    const is_escaped_dollar = if (value.escaped_dollar_index) |idx| idx == dollar_idx else false;
 
-                if (!is_escaped_dollar and !buffer_utils.isPreviousCharAnEscape(value)) {
-                    if (isValidIdentifierStart(char)) {
-                        try interpolation.openBracelessVariable(allocator, value);
+                    if (!is_escaped_dollar and !buffer_utils.isPreviousCharAnEscape(value)) {
+                        if (isValidIdentifierStart(char)) {
+                            try interpolation.openBracelessVariable(allocator, value);
+                        }
                     }
                 }
             }
@@ -76,7 +79,7 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, op
     }
 
     // Handle first character special cases
-    if (value.value_index == 0) {
+    if (value.buffer.len == 0) {
         if (char == '`') {
             if (value.backtick_quoted) {
                 return false;
@@ -94,12 +97,6 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, op
             }
         } else if (char != '"' and char != '\'') {
             if (!value.quoted and !value.triple_quoted and !value.double_quoted and !value.triple_double_quoted) {
-                // Determine if this is an implicit double quote or starting a variable
-                // If options.allow_braceless_variables is on, and char is $, it technically starts a variable later.
-                // But leading $ is handled by next char.
-                // Actually if string starts with $, value_index is 0.
-                // We add $. Then next char.
-                // So implicit double quote logic works fine.
                 value.double_quoted = true;
                 value.implicit_double_quote = true;
             }
@@ -131,9 +128,10 @@ pub fn readNextChar(allocator: std.mem.Allocator, value: *EnvValue, char: u8, op
                 (value.quoted and options.allow_single_quote_heredocs);
 
             if (!allow_newline) {
-                if (value.value_index > 0) {
-                    if (value.value[value.value_index - 1] == '\r') {
-                        value.value_index -= 1;
+                if (value.buffer.len > 0) {
+                    const items = value.value();
+                    if (items[items.len - 1] == '\r') {
+                        value.buffer.len -= 1;
                     }
                 }
                 return false;
@@ -203,7 +201,7 @@ test "readNextChar basic" {
     // 'a'
     const cont = try readNextChar(testing.allocator, &val, 'a', default_options);
     try testing.expect(cont);
-    try testing.expectEqualStrings("a", val.value);
+    try testing.expectEqualStrings("a", val.value());
 }
 
 test "readNextChar implicit double quote" {
@@ -252,7 +250,7 @@ test "readNextChar quotes" {
     // val - this triggers the walk
     _ = try readNextChar(testing.allocator, &val, 'v', default_options);
     try testing.expect(val.quoted);
-    try testing.expectEqualStrings("v", val.value);
+    try testing.expectEqualStrings("v", val.value());
 
     // ' -> closing quote starts streak
     const cont = try readNextChar(testing.allocator, &val, '\'', default_options);
@@ -261,7 +259,7 @@ test "readNextChar quotes" {
     // any other char -> triggers the walk that returns false
     const cont2 = try readNextChar(testing.allocator, &val, ' ', default_options);
     try testing.expect(!cont2);
-    try testing.expectEqualStrings("v", val.value);
+    try testing.expectEqualStrings("v", val.value());
 }
 
 test "readNextChar double quotes" {
@@ -276,7 +274,7 @@ test "readNextChar double quotes" {
     // v - this triggers the walk
     _ = try readNextChar(testing.allocator, &val, 'v', default_options);
     try testing.expect(val.double_quoted);
-    try testing.expectEqualStrings("v", val.value);
+    try testing.expectEqualStrings("v", val.value());
 
     // " -> closing quote starts streak
     const cont = try readNextChar(testing.allocator, &val, '"', default_options);
@@ -285,7 +283,7 @@ test "readNextChar double quotes" {
     // any other char -> triggers the walk that returns false
     const cont2 = try readNextChar(testing.allocator, &val, ' ', default_options);
     try testing.expect(!cont2);
-    try testing.expectEqualStrings("v", val.value);
+    try testing.expectEqualStrings("v", val.value());
 }
 
 test "readNextChar escape" {
@@ -296,13 +294,13 @@ test "readNextChar escape" {
     // \
     _ = try readNextChar(testing.allocator, &val, '\\', default_options);
     try testing.expectEqual(@as(usize, 1), val.back_slash_streak);
-    try testing.expectEqualStrings("", val.value); // Not added yet
+    try testing.expectEqualStrings("", val.value()); // Not added yet
 
     // n -> \n
     const cont = try readNextChar(testing.allocator, &val, 'n', default_options);
     try testing.expect(cont);
     try testing.expectEqual(@as(usize, 0), val.back_slash_streak);
-    try testing.expectEqualStrings("\n", val.value);
+    try testing.expectEqualStrings("\n", val.value());
 }
 
 test "readNextChar interpolation" {
@@ -321,7 +319,7 @@ test "readNextChar interpolation" {
     // {
     _ = try readNextChar(testing.allocator, &val, '{', default_options);
     try testing.expect(val.is_parsing_variable);
-    try testing.expectEqualStrings("a${", val.value);
+    try testing.expectEqualStrings("a${", val.value());
 
     // b
     _ = try readNextChar(testing.allocator, &val, 'b', default_options);
@@ -329,7 +327,7 @@ test "readNextChar interpolation" {
     // }
     _ = try readNextChar(testing.allocator, &val, '}', default_options);
     try testing.expect(!val.is_parsing_variable);
-    try testing.expectEqualStrings("a${b}", val.value);
+    try testing.expectEqualStrings("a${b}", val.value());
 
     try testing.expectEqual(@as(usize, 1), val.interpolations.items.len);
 }

@@ -10,6 +10,7 @@
         "src/parser/read_pair.zig",
         "benchmarks/allocation_benchmark.zig",
         "docs/Performance.md",
-        "Tasks/completed/18_prescanner_pair_count_estimation.md"
+        "Tasks/completed/18_prescanner_pair_count_estimation.md",
+        "Tasks/completed/25_optimize_reusable_buffer_for_minimal_allocation.md"
     ]
 }

@@ -27,20 +27,11 @@ pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair
     }
 
     // Trim right side of key
-    while (pair.key.key_index > 0) {
-        if (pair.key.key[pair.key.key_index - 1] != ' ') {
+    while (pair.key.buffer.len > 0) {
+        if (pair.key.buffer.ptr[pair.key.buffer.len - 1] != ' ') {
             break;
         }
-        pair.key.key_index -= 1;
-    }
-
-    // Copy key to own buffer
-    if (!pair.key.hasOwnBuffer()) {
-        const tmp_str = try allocator.alloc(u8, pair.key.key_index);
-        errdefer allocator.free(tmp_str);
-        pair.key.setOwnBuffer(tmp_str);
-    } else {
-        try pair.key.clipOwnBuffer(pair.key.key_index);
+        pair.key.buffer.len -= 1;
     }
 
     // Read value
@@ -50,15 +41,6 @@ pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair
     }
 
     if (value_result == ReadResult.comment_encountered or value_result == ReadResult.success) {
-        // Copy value to own buffer
-        if (!pair.value.hasOwnBuffer()) {
-            const tmp_str = try allocator.alloc(u8, pair.value.value_index);
-            errdefer allocator.free(tmp_str);
-            @memcpy(tmp_str, pair.value.value[0..pair.value.value_index]);
-            pair.value.setOwnBuffer(tmp_str);
-        } else {
-            try pair.value.clipOwnBuffer(pair.value.value_index);
-        }
         interpolation.removeUnclosedInterpolation(&pair.value);
         return ReadResult.success;
     }
@@ -90,26 +72,70 @@ pub fn readPairsWithHints(
     }
     errdefer memory.deletePairs(allocator, &pairs);
 
-    while (true) {
-        // Use capacity hints for initialization
-        var pair = try EnvPair.initWithCapacity(
-            allocator,
-            hints.max_key_size,
-            hints.max_value_size,
-        );
+    // Use a scratch pair to minimize allocations
+    var scratch_pair = try EnvPair.initWithCapacity(
+        allocator,
+        hints.max_key_size,
+        hints.max_value_size,
+    );
+    defer scratch_pair.deinit();
 
-        const result = try readPair(allocator, stream, &pair, options);
-        if (result == ReadResult.end_of_stream_value) {
-            try pairs.append(allocator, pair);
-            break;
-        }
-        if (result == ReadResult.success) {
-            try pairs.append(allocator, pair);
+    while (true) {
+        scratch_pair.clear(); // Reset scratch pair for reuse
+
+        const result = try readPair(allocator, stream, &scratch_pair, options);
+
+        if (result == ReadResult.end_of_stream_value or result == ReadResult.success) {
+            // Clone the scratch pair into a new pair for the list
+            // We want exact sized buffers for the stored pair to save memory
+            // But we can't easily "move" from scratch without losing scratch's capacity.
+            // So we copy.
+            var new_pair = EnvPair.init(allocator); // Init empty
+
+            // Alloc key
+            const key_slice = scratch_pair.key.key();
+            const new_key_buf = try allocator.alloc(u8, key_slice.len);
+            @memcpy(new_key_buf, key_slice);
+            new_pair.key.setOwnBuffer(new_key_buf);
+
+            // Alloc value
+            const val_slice = scratch_pair.value.value();
+            const new_val_buf = try allocator.alloc(u8, val_slice.len);
+            @memcpy(new_val_buf, val_slice);
+            new_pair.value.setOwnBuffer(new_val_buf);
+
+            // Should we copy interpolations?
+            // value.interpolations is an ArrayListUnmanaged(VariablePosition).
+            // Yes, if there are interpolations, they need to be copied.
+            if (scratch_pair.value.interpolations.items.len > 0) {
+                // Deep copy interpolations because scratch_pair.clear() will free the original strings
+                for (scratch_pair.value.interpolations.items) |interp| {
+                    var new_interp = interp; // Copy struct fields
+
+                    // Duplicate the string if it exists
+                    if (interp.variable_str.len > 0) {
+                        new_interp.variable_str = try allocator.dupe(u8, interp.variable_str);
+                        new_interp.allocator = allocator; // Mark as owning memory
+                    } else {
+                        new_interp.variable_str = "";
+                        new_interp.allocator = null;
+                    }
+
+                    try new_pair.value.interpolations.append(allocator, new_interp);
+                }
+            }
+
+            // Copy state flags
+            new_pair.value.quoted = scratch_pair.value.quoted;
+            new_pair.value.double_quoted = scratch_pair.value.double_quoted;
+            // ... copy other relevant flags if needed by consumer?
+            // Usually only quoted status matters for later processing.
+
+            try pairs.append(allocator, new_pair);
+
+            if (result == ReadResult.end_of_stream_value) break;
             continue;
         }
-
-        // Free failed pair
-        pair.deinit();
 
         if (result == ReadResult.comment_encountered or result == ReadResult.fail) {
             continue;
@@ -144,8 +170,8 @@ test "readPair simple pair" {
     const result = try readPair(testing.allocator, &stream, &pair, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqualStrings("KEY", pair.key.key);
-    try testing.expectEqualStrings("value", pair.value.value);
+    try testing.expectEqualStrings("KEY", pair.key.key());
+    try testing.expectEqualStrings("value", pair.value.value());
 }
 
 test "readPair with whitespace" {
@@ -158,8 +184,8 @@ test "readPair with whitespace" {
     const result = try readPair(testing.allocator, &stream, &pair, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqualStrings("KEY", pair.key.key);
-    // Value should have right trimming if implicit double quote
+    try testing.expectEqualStrings("KEY", pair.key.key());
+    // Value should have right trimming if implicit double quote, logic handles it in readValue
 }
 
 test "readPair with quotes" {
@@ -172,7 +198,8 @@ test "readPair with quotes" {
     const result = try readPair(testing.allocator, &stream, &pair, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqualStrings("KEY", pair.key.key);
+    try testing.expectEqualStrings("KEY", pair.key.key());
+    try testing.expectEqualStrings("quoted value", pair.value.value());
 }
 
 test "readPair comment line" {
@@ -199,12 +226,12 @@ test "readPairs multiple pairs" {
     }
 
     try testing.expectEqual(@as(usize, 3), pairs.items.len);
-    try testing.expectEqualStrings("KEY1", pairs.items[0].key.key);
-    try testing.expectEqualStrings("value1", pairs.items[0].value.value);
-    try testing.expectEqualStrings("KEY2", pairs.items[1].key.key);
-    try testing.expectEqualStrings("value2", pairs.items[1].value.value);
-    try testing.expectEqualStrings("KEY3", pairs.items[2].key.key);
-    try testing.expectEqualStrings("value3", pairs.items[2].value.value);
+    try testing.expectEqualStrings("KEY1", pairs.items[0].key.key());
+    try testing.expectEqualStrings("value1", pairs.items[0].value.value());
+    try testing.expectEqualStrings("KEY2", pairs.items[1].key.key());
+    try testing.expectEqualStrings("value2", pairs.items[1].value.value());
+    try testing.expectEqualStrings("KEY3", pairs.items[2].key.key());
+    try testing.expectEqualStrings("value3", pairs.items[2].value.value());
 }
 
 test "readPairs with comments" {
@@ -219,8 +246,8 @@ test "readPairs with comments" {
     }
 
     try testing.expectEqual(@as(usize, 2), pairs.items.len);
-    try testing.expectEqualStrings("KEY1", pairs.items[0].key.key);
-    try testing.expectEqualStrings("KEY2", pairs.items[1].key.key);
+    try testing.expectEqualStrings("KEY1", pairs.items[0].key.key());
+    try testing.expectEqualStrings("KEY2", pairs.items[1].key.key());
 }
 
 test "readPairs with empty lines" {
@@ -250,8 +277,8 @@ test "readPairs windows line endings" {
     }
 
     try testing.expectEqual(@as(usize, 2), pairs.items.len);
-    try testing.expectEqualStrings("KEY1", pairs.items[0].key.key);
-    try testing.expectEqualStrings("KEY2", pairs.items[1].key.key);
+    try testing.expectEqualStrings("KEY1", pairs.items[0].key.key());
+    try testing.expectEqualStrings("KEY2", pairs.items[1].key.key());
 }
 
 test "readPairs empty stream" {

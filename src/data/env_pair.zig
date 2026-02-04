@@ -20,6 +20,11 @@ pub const EnvPair = struct {
         };
     }
 
+    pub fn clear(self: *EnvPair) void {
+        self.key.clear();
+        self.value.clear();
+    }
+
     pub fn deinit(self: *EnvPair) void {
         self.key.deinit();
         self.value.deinit();
@@ -32,10 +37,10 @@ test "EnvPair initialization and lifecycle" {
     defer pair.deinit();
 
     // Verify key init
-    try std.testing.expectEqualStrings("", pair.key.key);
+    try std.testing.expectEqualStrings("", pair.key.key());
 
     // Verify value init
-    try std.testing.expectEqualStrings("", pair.value.value);
+    try std.testing.expectEqualStrings("", pair.value.value());
 
     // Modify and check cleanup
     const kbuf = try allocator.alloc(u8, 3);
@@ -46,8 +51,8 @@ test "EnvPair initialization and lifecycle" {
     @memcpy(vbuf, "value");
     pair.value.setOwnBuffer(vbuf);
 
-    try std.testing.expectEqualStrings("key", pair.key.key);
-    try std.testing.expectEqualStrings("value", pair.value.value);
+    try std.testing.expectEqualStrings("key", pair.key.key());
+    try std.testing.expectEqualStrings("value", pair.value.value());
 }
 
 test "EnvPair initWithCapacity" {

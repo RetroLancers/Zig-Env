@@ -19,12 +19,10 @@ pub fn readKey(stream: *EnvStream, key: *EnvKey) !ReadResult {
 
         switch (key_char) {
             ' ' => {
-                if (key.key_index == 0) continue; // left trim
+                if (key.buffer.len == 0) continue; // left trim
                 try key.buffer.append(key_char);
-                key.key_index += 1;
             },
             '=' => {
-                key.key = key.buffer.items;
                 // If we are at EOF immediately after '=', we can't read value.
                 if (stream.eof()) return ReadResult.end_of_stream_value;
                 return ReadResult.success;
@@ -35,11 +33,8 @@ pub fn readKey(stream: *EnvStream, key: *EnvKey) !ReadResult {
             },
             else => {
                 try key.buffer.append(key_char);
-                key.key_index += 1;
             },
         }
-
-        key.key = key.buffer.items;
     }
 
     return ReadResult.end_of_stream_key;
@@ -54,7 +49,7 @@ test "readKey simple key" {
     const result = try readKey(&stream, &key);
 
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqualStrings("KEY", key.key);
+    try testing.expectEqualStrings("KEY", key.key());
 }
 
 test "readKey leading spaces" {
@@ -66,7 +61,7 @@ test "readKey leading spaces" {
     const result = try readKey(&stream, &key);
 
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqualStrings("SPACED_KEY", key.key);
+    try testing.expectEqualStrings("SPACED_KEY", key.key());
 }
 
 test "readKey internal spaces" {
@@ -78,7 +73,7 @@ test "readKey internal spaces" {
     const result = try readKey(&stream, &key);
 
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqualStrings("my key", key.key);
+    try testing.expectEqualStrings("my key", key.key());
 }
 
 test "readKey comment line" {
@@ -90,7 +85,7 @@ test "readKey comment line" {
     const result = try readKey(&stream, &key);
 
     try testing.expectEqual(ReadResult.comment_encountered, result);
-    try testing.expectEqualStrings("", key.key);
+    try testing.expectEqualStrings("", key.key());
 
     // skipToNewline consumes until newline, so next char should be 'n' from "next"
     const next = stream.get();
@@ -116,7 +111,7 @@ test "readKey windows line endings" {
 
     const result = try readKey(&stream, &key);
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqualStrings("KEY", key.key);
+    try testing.expectEqualStrings("KEY", key.key());
 }
 
 test "readKey EOF during key" {
@@ -128,5 +123,5 @@ test "readKey EOF during key" {
     const result = try readKey(&stream, &key);
 
     try testing.expectEqual(ReadResult.end_of_stream_key, result);
-    try testing.expectEqualStrings("INCOMPLETE", key.key);
+    try testing.expectEqualStrings("INCOMPLETE", key.key());
 }

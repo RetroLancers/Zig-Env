@@ -11,9 +11,9 @@ pub fn walkSingleQuotes(value: *EnvValue) !bool {
 
     // At start of value?
     // We're at start if:
-    // 1. value_index is 0 (quotes not added yet) OR value_index == single_quote_streak (only quotes in buffer)
+    // 1. buffer.len is 0 (quotes not added yet) OR buffer.len == single_quote_streak (only quotes in buffer)
     // 2. AND we're not already in a quote mode (otherwise we're ending, not starting)
-    const at_start = ((value.value_index == 0) or (value.value_index == value.single_quote_streak)) and (!value.quoted and !value.triple_quoted);
+    const at_start = ((value.buffer.len == 0) or (value.buffer.len == value.single_quote_streak)) and (!value.quoted and !value.triple_quoted);
 
     if (at_start) {
         if (value.single_quote_streak == 1) {
@@ -56,9 +56,9 @@ pub fn walkDoubleQuotes(value: *EnvValue) !bool {
 
     // At start of value?
     // We're at start if:
-    // 1. value_index is 0 (quotes not added yet) OR value_index == double_quote_streak (only quotes in buffer)
+    // 1. buffer.len is 0 (quotes not added yet) OR buffer.len == double_quote_streak (only quotes in buffer)
     // 2. AND we're not already in a double quote mode (otherwise we're ending, not starting)
-    const at_start = ((value.value_index == 0) or (value.value_index == value.double_quote_streak)) and (!value.double_quoted and !value.triple_double_quoted);
+    const at_start = ((value.buffer.len == 0) or (value.buffer.len == value.double_quote_streak)) and (!value.double_quoted and !value.triple_double_quoted);
 
     if (at_start) {
         if (value.double_quote_streak == 1) {
@@ -148,7 +148,7 @@ test "walkSingleQuotes - excess quotes start" {
     val.single_quote_streak = 5; // ''' + ''
     _ = try walkSingleQuotes(&val);
     try std.testing.expect(val.triple_quoted);
-    try std.testing.expectEqualStrings("''", val.value);
+    try std.testing.expectEqualStrings("''", val.value());
 }
 
 test "walkSingleQuotes - excess quotes end" {
@@ -164,7 +164,7 @@ test "walkSingleQuotes - excess quotes end" {
     val.single_quote_streak = 5; // ''' + ''
     const stop = try walkSingleQuotes(&val);
     try std.testing.expect(stop);
-    try std.testing.expectEqualStrings("a''", val.value);
+    try std.testing.expectEqualStrings("a''", val.value());
 }
 
 test "walkDoubleQuotes - basic" {
@@ -194,8 +194,6 @@ test "walkDoubleQuotes - single quotes inside" {
 
     // Simulate finding single quotes inside
     try buffer_utils.addToBuffer(&val, '\'');
-    // The walker doesn't care about content, so this is implicitly tested by generic content,
-    // but confirming it doesn't trigger anything specific in EnvValue is good.
 
     try std.testing.expect(val.double_quoted);
 
@@ -257,10 +255,10 @@ test "walkDoubleQuotes - excess" {
     val.double_quote_streak = 4;
     _ = try walkDoubleQuotes(&val);
     try std.testing.expect(val.triple_double_quoted);
-    try std.testing.expectEqualStrings("\"", val.value);
+    try std.testing.expectEqualStrings("\"", val.value());
 
     val.double_quote_streak = 4;
     const stop = try walkDoubleQuotes(&val);
     try std.testing.expect(stop);
-    try std.testing.expectEqualStrings("\"\"", val.value);
+    try std.testing.expectEqualStrings("\"\"", val.value());
 }

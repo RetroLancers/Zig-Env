@@ -64,7 +64,7 @@ pub fn processPossibleControlCharacter(value: *EnvValue, char: u8) !bool {
         },
         '$' => {
             try addToBuffer(value, '$');
-            value.escaped_dollar_index = value.value_index - 1;
+            value.escaped_dollar_index = value.buffer.len - 1;
             process = true;
         },
         else => {
@@ -84,17 +84,16 @@ test "walkBackSlashes - paired backslashes" {
     // 4 backslashes -> 2 output, 0 remainder
     val.back_slash_streak = 4;
     try walkBackSlashes(&val);
-    try std.testing.expectEqualStrings("\\\\", val.value);
+    try std.testing.expectEqualStrings("\\\\", val.value());
     try std.testing.expectEqual(@as(usize, 0), val.back_slash_streak);
 
     val.buffer.clearRetainingCapacity();
-    val.value = "";
-    val.value_index = 0;
+    val.back_slash_streak = 0;
 
     // 2 backslashes -> 1 output, 0 remainder
     val.back_slash_streak = 2;
     try walkBackSlashes(&val);
-    try std.testing.expectEqualStrings("\\", val.value);
+    try std.testing.expectEqualStrings("\\", val.value());
     try std.testing.expectEqual(@as(usize, 0), val.back_slash_streak);
 }
 
@@ -106,17 +105,15 @@ test "walkBackSlashes - odd backslashes" {
     // 3 backslashes -> 1 output, 1 remainder
     val.back_slash_streak = 3;
     try walkBackSlashes(&val);
-    try std.testing.expectEqualStrings("\\", val.value);
+    try std.testing.expectEqualStrings("\\", val.value());
     try std.testing.expectEqual(@as(usize, 1), val.back_slash_streak);
 
     val.buffer.clearRetainingCapacity();
-    val.value = "";
-    val.value_index = 0;
 
     // 1 backslash -> 0 output, 1 remainder
     val.back_slash_streak = 1;
     try walkBackSlashes(&val);
-    try std.testing.expectEqualStrings("", val.value);
+    try std.testing.expectEqualStrings("", val.value());
     try std.testing.expectEqual(@as(usize, 1), val.back_slash_streak);
 }
 
@@ -127,7 +124,7 @@ test "walkBackSlashes - zero backslashes" {
 
     val.back_slash_streak = 0;
     try walkBackSlashes(&val);
-    try std.testing.expectEqualStrings("", val.value);
+    try std.testing.expectEqualStrings("", val.value());
     try std.testing.expectEqual(@as(usize, 0), val.back_slash_streak);
 }
 
@@ -137,28 +134,24 @@ test "processPossibleControlCharacter - known escapes" {
     defer val.deinit();
 
     _ = try processPossibleControlCharacter(&val, 'n');
-    try std.testing.expectEqualStrings("\n", val.value);
+    try std.testing.expectEqualStrings("\n", val.value());
 
     val.buffer.clearRetainingCapacity();
-    val.value_index = 0;
     _ = try processPossibleControlCharacter(&val, 't');
-    try std.testing.expectEqualStrings("\t", val.value);
+    try std.testing.expectEqualStrings("\t", val.value());
 
     val.buffer.clearRetainingCapacity();
-    val.value_index = 0;
     _ = try processPossibleControlCharacter(&val, 'r');
-    try std.testing.expectEqualStrings("\r", val.value);
+    try std.testing.expectEqualStrings("\r", val.value());
 
     val.buffer.clearRetainingCapacity();
-    val.value_index = 0;
     _ = try processPossibleControlCharacter(&val, 'b');
-    try std.testing.expectEqualStrings("\x08", val.value);
+    try std.testing.expectEqualStrings("\x08", val.value());
 
     // Test quote escaping
     val.buffer.clearRetainingCapacity();
-    val.value_index = 0;
     _ = try processPossibleControlCharacter(&val, '"');
-    try std.testing.expectEqualStrings("\"", val.value);
+    try std.testing.expectEqualStrings("\"", val.value());
 }
 
 test "processPossibleControlCharacter - unknown escapes" {
@@ -169,7 +162,7 @@ test "processPossibleControlCharacter - unknown escapes" {
     // \z -> \z
     const processed = try processPossibleControlCharacter(&val, 'z');
     try std.testing.expect(!processed);
-    try std.testing.expectEqualStrings("", val.value);
+    try std.testing.expectEqualStrings("", val.value());
     try std.testing.expectEqual(@as(usize, 0), val.back_slash_streak);
 }
 
@@ -206,5 +199,5 @@ test "full flow simulation" {
     // add 'c' literal
     try addToBuffer(&val, 'c');
 
-    try std.testing.expectEqualStrings("a\nb\\c", val.value);
+    try std.testing.expectEqualStrings("a\nb\\c", val.value());
 }

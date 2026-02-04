@@ -54,8 +54,8 @@ pub fn readValue(allocator: std.mem.Allocator, stream: *EnvStream, value: *EnvVa
 
     // Trim right side of implicit double quote
     if (value.implicit_double_quote) {
-        while (value.value_index > 0 and value.value[value.value_index - 1] == ' ') {
-            value.value_index -= 1;
+        while (value.buffer.len > 0 and value.buffer.ptr[value.buffer.len - 1] == ' ') {
+            value.buffer.len -= 1;
         }
     }
 
@@ -77,7 +77,7 @@ test "readValue simple value" {
     const result = try readValue(testing.allocator, &stream, &val, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqual(@as(usize, 6), val.value_index);
+    try testing.expectEqual(@as(usize, 6), val.buffer.len);
 }
 
 test "readValue quoted value" {
@@ -103,7 +103,7 @@ test "readValue with escape" {
     const result = try readValue(testing.allocator, &stream, &val, default_options);
 
     try testing.expectEqual(ReadResult.success, result);
-    try testing.expect(val.value_index > 0);
+    try testing.expect(val.buffer.len > 0);
 }
 
 test "readValue implicit double quote trimming" {
@@ -118,7 +118,7 @@ test "readValue implicit double quote trimming" {
     try testing.expectEqual(ReadResult.success, result);
     try testing.expect(val.implicit_double_quote);
     // Value should be trimmed on the right
-    try testing.expectEqual(@as(usize, 5), val.value_index);
+    try testing.expectEqual(@as(usize, 5), val.buffer.len);
 }
 
 test "readValue with interpolation" {

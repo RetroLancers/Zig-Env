@@ -188,7 +188,7 @@ test "large file performance" {
         try buffer.writer().print("KEY_{d}=VALUE_{d}\n", .{ i, i });
     }
 
-    var env = try parseString(allocator, buffer.items);
+    var env = try parseString(allocator, buffer.items());
     defer env.deinit();
 
     try std.testing.expectEqual(@as(usize, 1000), env.map.count());
