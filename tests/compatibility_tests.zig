@@ -113,7 +113,10 @@ test "compat: export prefix from bash-style dotenv" {
     const allocator = testing.allocator;
     const content = "export KEY=value";
 
-    var env = try zigenv.parseString(allocator, content);
+    var opts = zigenv.ParserOptions.defaults();
+    opts.support_export_prefix = true;
+
+    var env = try zigenv.parseStringWithOptions(allocator, content, opts, null, null);
     defer env.deinit();
 
     // Should parse with or without 'export' prefix
