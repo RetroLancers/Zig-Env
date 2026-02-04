@@ -2,6 +2,7 @@ const std = @import("std");
 const EnvStream = @import("env_stream.zig").EnvStream;
 const EnvKey = @import("../data/env_key.zig").EnvKey;
 const ReadResult = @import("../data/read_result.zig").ReadResult;
+const ParserOptions = @import("../data/parser_options.zig").ParserOptions;
 const testing = std.testing;
 
 pub fn readKey(stream: *EnvStream, key: *EnvKey, options: ParserOptions) !ReadResult {

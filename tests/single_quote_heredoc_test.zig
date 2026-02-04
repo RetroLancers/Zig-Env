@@ -15,7 +15,7 @@ test "single quote heredoc - basic" {
 
     var env = try parser.parseStringWithOptions(allocator, content, .{
         .allow_single_quote_heredocs = true,
-    });
+    }, null, null);
     defer env.deinit();
 
     try testing.expectEqualStrings("this is a heredoc\nas well", env.get("KEY").?);
@@ -32,7 +32,7 @@ test "single quote heredoc - multiple lines" {
 
     var env = try parser.parseStringWithOptions(allocator, content, .{
         .allow_single_quote_heredocs = true,
-    });
+    }, null, null);
     defer env.deinit();
 
     try testing.expectEqualStrings("line 1\nline 2\nline 3", env.get("KEY").?);
@@ -49,7 +49,7 @@ test "single quote heredoc - preserves literal backslash" {
 
     var env = try parser.parseStringWithOptions(allocator, content, .{
         .allow_single_quote_heredocs = true,
-    });
+    }, null, null);
     defer env.deinit();
 
     // In single quotes, \n is literal backslash-n, not a newline escape
@@ -67,7 +67,7 @@ test "single quote heredoc - preserves dollar signs" {
 
     var env = try parser.parseStringWithOptions(allocator, content, .{
         .allow_single_quote_heredocs = true,
-    });
+    }, null, null);
     defer env.deinit();
 
     // In single quotes, ${VAR} is literal, no interpolation
@@ -150,7 +150,7 @@ test "mixed - single quote heredoc followed by other pairs" {
 
     var env = try parser.parseStringWithOptions(allocator, content, .{
         .allow_single_quote_heredocs = true,
-    });
+    }, null, null);
     defer env.deinit();
 
     try testing.expectEqualStrings("line 1\nline 2", env.get("MULTI").?);
@@ -169,7 +169,7 @@ test "mixed - double and single quote heredocs" {
 
     var env = try parser.parseStringWithOptions(allocator, content, .{
         .allow_single_quote_heredocs = true,
-    });
+    }, null, null);
     defer env.deinit();
 
     try testing.expectEqualStrings("double\nheredoc", env.get("DOUBLE").?);
@@ -198,7 +198,7 @@ test "single quote heredoc with bashCompatible options" {
         \\multi-line'
     ;
 
-    var env = try parser.parseStringWithOptions(allocator, content, ParserOptions.bashCompatible());
+    var env = try parser.parseStringWithOptions(allocator, content, ParserOptions.bashCompatible(), null, null);
     defer env.deinit();
 
     try testing.expectEqualStrings("bash style\nmulti-line", env.get("KEY").?);
