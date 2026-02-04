@@ -116,12 +116,21 @@ pub fn closeVariable(allocator: std.mem.Allocator, value: *EnvValue) !void {
     // Extract variable name
     // Length = (end - start) + 1
     if (interpolation.variable_end >= interpolation.variable_start) {
-        const len = (interpolation.variable_end - interpolation.variable_start) + 1;
+        const full_len = (interpolation.variable_end - interpolation.variable_start) + 1;
         const start = interpolation.variable_start;
         // Safety check
-        if (start + len <= val_slice.len) {
-            const var_name = val_slice[start .. start + len];
-            try interpolation.setVariableStr(allocator, var_name);
+        if (start + full_len <= val_slice.len) {
+            const full_content = val_slice[start .. start + full_len];
+
+            if (std.mem.indexOf(u8, full_content, ":-")) |idx| {
+                const var_name = full_content[0..idx];
+                const default_val = full_content[idx + 2 ..];
+
+                try interpolation.setVariableStr(allocator, std.mem.trim(u8, var_name, &[_]u8{ ' ', '\t' }));
+                try interpolation.setDefaultValue(allocator, default_val);
+            } else {
+                try interpolation.setVariableStr(allocator, std.mem.trim(u8, full_content, &[_]u8{ ' ', '\t' }));
+            }
         }
     }
 

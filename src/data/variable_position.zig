@@ -8,6 +8,7 @@ pub const VariablePosition = struct {
     end_brace: usize,
     variable_end: usize,
     variable_str: []const u8,
+    default_value: []const u8,
     closed: bool,
     allocator: ?std.mem.Allocator,
 
@@ -19,6 +20,7 @@ pub const VariablePosition = struct {
             .end_brace = 0,
             .variable_end = 0,
             .variable_str = "",
+            .default_value = "",
             .closed = false,
             .allocator = null,
         };
@@ -28,6 +30,9 @@ pub const VariablePosition = struct {
         if (self.allocator) |allocator| {
             if (self.variable_str.len > 0) {
                 allocator.free(self.variable_str);
+            }
+            if (self.default_value.len > 0) {
+                allocator.free(self.default_value);
             }
         }
     }
@@ -41,6 +46,17 @@ pub const VariablePosition = struct {
         }
 
         self.variable_str = try allocator.dupe(u8, str);
+        self.allocator = allocator;
+    }
+
+    pub fn setDefaultValue(self: *VariablePosition, allocator: std.mem.Allocator, str: []const u8) !void {
+        if (self.allocator) |old_alloc| {
+            if (self.default_value.len > 0) {
+                old_alloc.free(self.default_value);
+            }
+        }
+
+        self.default_value = try allocator.dupe(u8, str);
         self.allocator = allocator;
     }
 };

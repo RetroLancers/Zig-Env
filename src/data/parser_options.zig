@@ -34,6 +34,16 @@ pub const ParserOptions = struct {
     /// Default: false (backward compatible - requires ${VAR})
     allow_braceless_variables: bool = false,
 
+    /// When enabled, allows the 'export ' prefix before a key.
+    /// Example: export KEY=VALUE
+    /// Default: false
+    support_export_prefix: bool = false,
+
+    /// When enabled, allows ':' as a key-value separator if followed by a space.
+    /// Example: KEY: VALUE
+    /// Default: false
+    support_colon_separator: bool = false,
+
     /// Returns the default parser options for maximum backward compatibility.
     pub fn defaults() ParserOptions {
         return ParserOptions{};

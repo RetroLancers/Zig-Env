@@ -12,7 +12,7 @@ const file_scanner = @import("file_scanner.zig");
 const testing = std.testing;
 
 pub fn readPair(allocator: std.mem.Allocator, stream: *EnvStream, pair: *EnvPair, options: ParserOptions) !ReadResult {
-    const result = try readKey(stream, &pair.key);
+    const result = try readKey(stream, &pair.key, options);
     if (result == ReadResult.fail or result == ReadResult.empty) {
         return ReadResult.fail;
     }
@@ -116,11 +116,17 @@ pub fn readPairsWithHints(
                     // Duplicate the string if it exists
                     if (interp.variable_str.len > 0) {
                         new_interp.variable_str = try allocator.dupe(u8, interp.variable_str);
-                        new_interp.allocator = allocator; // Mark as owning memory
                     } else {
                         new_interp.variable_str = "";
-                        new_interp.allocator = null;
                     }
+
+                    if (interp.default_value.len > 0) {
+                        new_interp.default_value = try allocator.dupe(u8, interp.default_value);
+                    } else {
+                        new_interp.default_value = "";
+                    }
+
+                    new_interp.allocator = allocator; // Mark as owning memory
 
                     try new_pair.value.interpolations.append(new_interp);
                 }

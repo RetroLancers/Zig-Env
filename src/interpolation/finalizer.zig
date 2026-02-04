@@ -5,15 +5,23 @@ const VariablePosition = @import("../data/variable_position.zig").VariablePositi
 
 const EnvPairList = @import("../data/env_pair_list.zig").EnvPairList;
 
+pub const LookupFn = *const fn (context: ?*anyopaque, key: []const u8) ?[]const u8;
+
 /// Finalizes all values in the provided list of pairs.
-pub fn finalizeAllValues(allocator: std.mem.Allocator, pairs: *EnvPairList) !void {
+pub fn finalizeAllValues(allocator: std.mem.Allocator, pairs: *EnvPairList, lookup_fn: ?LookupFn, context: ?*anyopaque) !void {
     for (pairs.items) |*pair| {
-        _ = try finalizeValue(allocator, pair, pairs);
+        _ = try finalizeValue(allocator, pair, pairs, lookup_fn, context);
     }
 }
 
 /// Recursively finalizes a single value, resolving all variable interpolations.
-pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *EnvPairList) !FinalizeResult {
+pub fn finalizeValue(
+    allocator: std.mem.Allocator,
+    pair: *EnvPair,
+    pairs: *EnvPairList,
+    lookup_fn: ?LookupFn,
+    context: ?*anyopaque,
+) !FinalizeResult {
     if (pair.value.is_already_interpolated) {
         return .copied;
     }
@@ -41,18 +49,36 @@ pub fn finalizeValue(allocator: std.mem.Allocator, pair: *EnvPair, pairs: *EnvPa
 
         const var_name = interp.variable_str;
 
-        // Find matching key in pairs
+        var replacement_opt: ?[]const u8 = null;
+
+        // 1. Try internal lookup in currently being parsed pairs
         if (findPairByKey(pairs, var_name)) |referenced_pair| {
             // Recursively finalize the referenced value
-            const res = try finalizeValue(allocator, referenced_pair, pairs);
+            const res = try finalizeValue(allocator, referenced_pair, pairs, lookup_fn, context);
 
             if (res == .circular) {
                 found_circular = true;
             } else {
-                // Replace the interpolation with the value
-                try replaceInterpolation(allocator, pair, i, referenced_pair.value.value());
-                result_status = .interpolated;
+                replacement_opt = referenced_pair.value.value();
             }
+        }
+
+        // 2. Try external lookup if internal failed (and not circular)
+        if (replacement_opt == null and !found_circular and lookup_fn != null) {
+            replacement_opt = lookup_fn.?(context, var_name);
+        }
+
+        // 3. Use default value if both lookups failed
+        if (replacement_opt == null and !found_circular) {
+            if (interp.default_value.len > 0) {
+                replacement_opt = interp.default_value;
+            }
+        }
+
+        if (replacement_opt) |replacement| {
+            // Replace the interpolation with the value
+            try replaceInterpolation(allocator, pair, i, replacement);
+            result_status = .interpolated;
         }
         // If not found, we leave the ${var} as is, per requirements.
     }
@@ -123,7 +149,7 @@ test "finalizeValue - basic substitution" {
     try p2.value.interpolations.append(vp_ref);
     try pairs.append(p2);
 
-    const res = try finalizeValue(allocator, &pairs.items[1], &pairs);
+    const res = try finalizeValue(allocator, &pairs.items[1], &pairs, null, null);
     try std.testing.expect(res == .interpolated);
     try std.testing.expectEqualStrings("hello world", pairs.items[1].value.value());
 }
@@ -161,7 +187,7 @@ test "finalizeValue - recursive substitution" {
     p3.value.setOwnBuffer(try allocator.dupe(u8, "final"));
     try pairs.append(p3);
 
-    const res = try finalizeValue(allocator, &pairs.items[0], &pairs);
+    const res = try finalizeValue(allocator, &pairs.items[0], &pairs, null, null);
     try std.testing.expect(res == .interpolated);
     try std.testing.expectEqualStrings("final", pairs.items[0].value.value());
     try std.testing.expectEqualStrings("final", pairs.items[1].value.value());
@@ -194,7 +220,7 @@ test "finalizeValue - circular dependency" {
     try p2.value.interpolations.append(vp_b2);
     try pairs.append(p2);
 
-    const res = try finalizeValue(allocator, &pairs.items[0], &pairs);
+    const res = try finalizeValue(allocator, &pairs.items[0], &pairs, null, null);
     // When circular, it should return circular and keep the original string
     try std.testing.expect(res == .circular);
     try std.testing.expectEqualStrings("${B}", pairs.items[0].value.value());
@@ -216,7 +242,7 @@ test "finalizeValue - missing variable" {
     try p1.value.interpolations.append(vp_missing);
     try pairs.append(p1);
 
-    const res = try finalizeValue(allocator, &pairs.items[0], &pairs);
+    const res = try finalizeValue(allocator, &pairs.items[0], &pairs, null, null);
     try std.testing.expect(res == .copied);
     try std.testing.expectEqualStrings("${MISSING}", pairs.items[0].value.value());
 }
@@ -251,7 +277,7 @@ test "finalizeValue - multiple interpolations in reverse order" {
     try p3.value.interpolations.append(vp_b); // ${B}
     try pairs.append(p3);
 
-    const res = try finalizeValue(allocator, &pairs.items[2], &pairs);
+    const res = try finalizeValue(allocator, &pairs.items[2], &pairs, null, null);
     try std.testing.expect(res == .interpolated);
     try std.testing.expectEqualStrings("12", pairs.items[2].value.value());
 }

@@ -4,7 +4,7 @@ const EnvKey = @import("../data/env_key.zig").EnvKey;
 const ReadResult = @import("../data/read_result.zig").ReadResult;
 const testing = std.testing;
 
-pub fn readKey(stream: *EnvStream, key: *EnvKey) !ReadResult {
+pub fn readKey(stream: *EnvStream, key: *EnvKey, options: ParserOptions) !ReadResult {
     if (!stream.good()) return ReadResult.end_of_stream_key;
 
     while (stream.good()) {
@@ -22,17 +22,29 @@ pub fn readKey(stream: *EnvStream, key: *EnvKey) !ReadResult {
                 if (key.buffer.len == 0) continue; // left trim
 
                 // Handle "export" keyword (stripping "export " prefix)
-                if (key.buffer.len == 6 and std.mem.eql(u8, key.buffer.usedSlice(), "export")) {
+                if (options.support_export_prefix and key.buffer.len == 6 and std.mem.eql(u8, key.buffer.usedSlice(), "export")) {
                     key.buffer.clearRetainingCapacity();
                     continue;
                 }
 
                 try key.buffer.append(key_char);
             },
-            '=', ':' => {
-                // If we are at EOF immediately after '=' or ':', we can't read value.
+            '=' => {
                 if (stream.eof()) return ReadResult.end_of_stream_value;
                 return ReadResult.success;
+            },
+            ':' => {
+                if (options.support_colon_separator) {
+                    // Bun's colon separator requires a following space
+                    if (stream.peek()) |next_char| {
+                        if (next_char == ' ') {
+                            _ = stream.get(); // consume the space
+                            if (stream.eof()) return ReadResult.end_of_stream_value;
+                            return ReadResult.success;
+                        }
+                    }
+                }
+                try key.buffer.append(key_char);
             },
             '\r' => continue,
             '\n' => {
@@ -48,48 +60,52 @@ pub fn readKey(stream: *EnvStream, key: *EnvKey) !ReadResult {
 }
 
 test "readKey simple key" {
+    const opts = ParserOptions.defaults();
     var stream = EnvStream.init("KEY=value");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("KEY", key.key());
 }
 
 test "readKey leading spaces" {
+    const opts = ParserOptions.defaults();
     var stream = EnvStream.init("  SPACED_KEY=value");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("SPACED_KEY", key.key());
 }
 
 test "readKey internal spaces" {
+    const opts = ParserOptions.defaults();
     var stream = EnvStream.init("my key=value");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("my key", key.key());
 }
 
 test "readKey comment line" {
+    const opts = ParserOptions.defaults();
     var stream = EnvStream.init("#comment\nnext");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
 
     try testing.expectEqual(ReadResult.comment_encountered, result);
     try testing.expectEqualStrings("", key.key());
@@ -100,72 +116,66 @@ test "readKey comment line" {
 }
 
 test "readKey invalid key" {
+    const opts = ParserOptions.defaults();
     var stream = EnvStream.init("INVALID\n");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
 
     try testing.expectEqual(ReadResult.fail, result);
 }
 
 test "readKey windows line endings" {
+    const opts = ParserOptions.defaults();
     var stream = EnvStream.init("KEY\r=value");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("KEY", key.key());
 }
 
 test "readKey EOF during key" {
+    const opts = ParserOptions.defaults();
     var stream = EnvStream.init("INCOMPLETE");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
 
     try testing.expectEqual(ReadResult.end_of_stream_key, result);
     try testing.expectEqualStrings("INCOMPLETE", key.key());
 }
 
 test "readKey with export prefix" {
+    var opts = ParserOptions.defaults();
+    opts.support_export_prefix = true;
     var stream = EnvStream.init("export KEY=value");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("KEY", key.key());
 }
 
 test "readKey with colon separator" {
-    var stream = EnvStream.init("KEY:value");
-
-    var key = EnvKey.init(testing.allocator);
-    defer key.deinit();
-
-    const result = try readKey(&stream, &key);
-
-    try testing.expectEqual(ReadResult.success, result);
-    try testing.expectEqualStrings("KEY", key.key());
-}
-
-test "readKey with colon and space" {
+    var opts = ParserOptions.defaults();
+    opts.support_colon_separator = true;
     var stream = EnvStream.init("KEY: value");
 
     var key = EnvKey.init(testing.allocator);
     defer key.deinit();
 
-    const result = try readKey(&stream, &key);
+    const result = try readKey(&stream, &key, opts);
 
     try testing.expectEqual(ReadResult.success, result);
     try testing.expectEqualStrings("KEY", key.key());
-    // The space after : is consumed by readValue usually, but readKey stops at :
 }

@@ -14,27 +14,39 @@ pub const ParserOptions = @import("data/parser_options.zig").ParserOptions;
 
 /// High-level API to parse a .env file from disk
 pub fn parseFile(allocator: Allocator, path: []const u8) !Env {
-    return parseFileWithOptions(allocator, path, ParserOptions.defaults());
+    return parseFileWithOptions(allocator, path, ParserOptions.defaults(), null, null);
 }
 
 /// Parse a .env file with custom options
-pub fn parseFileWithOptions(allocator: Allocator, path: []const u8, options: ParserOptions) !Env {
+pub fn parseFileWithOptions(
+    allocator: Allocator,
+    path: []const u8,
+    options: ParserOptions,
+    lookup_fn: ?finalizer.LookupFn,
+    context: ?*anyopaque,
+) !Env {
     const file = try std.fs.cwd().openFile(path, .{});
     defer file.close();
 
     const content = try file.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(content);
 
-    return parseStringWithOptions(allocator, content, options);
+    return parseStringWithOptions(allocator, content, options, lookup_fn, context);
 }
 
 /// Parse .env content from a string
 pub fn parseString(allocator: Allocator, content: []const u8) !Env {
-    return parseStringWithOptions(allocator, content, ParserOptions.defaults());
+    return parseStringWithOptions(allocator, content, ParserOptions.defaults(), null, null);
 }
 
 /// Parse .env content from a string with custom options
-pub fn parseStringWithOptions(allocator: Allocator, content: []const u8, options: ParserOptions) !Env {
+pub fn parseStringWithOptions(
+    allocator: std.mem.Allocator,
+    content: []const u8,
+    options: ParserOptions,
+    lookup_fn: ?finalizer.LookupFn,
+    context: ?*anyopaque,
+) !Env {
     // Pre-scan for buffer size hints to optimize allocations
     const hints = file_scanner.scanBufferSizes(content);
 
@@ -43,7 +55,7 @@ pub fn parseStringWithOptions(allocator: Allocator, content: []const u8, options
     var pairs = try read_pair.readPairsWithHints(allocator, &stream, hints, options);
     errdefer memory.deletePairs(&pairs);
 
-    try finalizer.finalizeAllValues(allocator, &pairs);
+    try finalizer.finalizeAllValues(allocator, &pairs, lookup_fn, context);
 
     var env = Env.init(allocator);
     errdefer env.deinit();
@@ -72,14 +84,20 @@ pub const parse = parseString;
 
 /// Parse from any std.io.Reader
 pub fn parseReader(allocator: Allocator, reader_obj: anytype) !Env {
-    return parseReaderWithOptions(allocator, reader_obj, ParserOptions.defaults());
+    return parseReaderWithOptions(allocator, reader_obj, ParserOptions.defaults(), null, null);
 }
 
 /// Parse from any std.io.Reader with custom options
-pub fn parseReaderWithOptions(allocator: Allocator, reader_obj: anytype, options: ParserOptions) !Env {
+pub fn parseReaderWithOptions(
+    allocator: Allocator,
+    reader_obj: anytype,
+    options: ParserOptions,
+    lookup_fn: ?finalizer.LookupFn,
+    context: ?*anyopaque,
+) !Env {
     const content = try reader_obj.readAllAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(content);
-    return parseStringWithOptions(allocator, content, options);
+    return parseStringWithOptions(allocator, content, options, lookup_fn, context);
 }
 
 test "parseString basic" {
@@ -100,6 +118,32 @@ test "parseString with interpolation" {
 
     try std.testing.expectEqualStrings("antigravity", env.get("USER").?);
     try std.testing.expectEqualStrings("hello antigravity", env.get("WELCOME").?);
+}
+
+test "parseString with :- interpolation" {
+    const allocator = std.testing.allocator;
+    const content = "WELCOME=hello ${USER:-world}";
+    var env = try parseString(allocator, content);
+    defer env.deinit();
+
+    try std.testing.expectEqualStrings("hello world", env.get("WELCOME").?);
+}
+
+test "parseString with external lookup" {
+    const allocator = std.testing.allocator;
+    const content = "WELCOME=hello ${USER}";
+
+    const Context = struct {
+        pub fn lookup(_: ?*anyopaque, key: []const u8) ?[]const u8 {
+            if (std.mem.eql(u8, key, "USER")) return "external";
+            return null;
+        }
+    };
+
+    var env = try parseStringWithOptions(allocator, content, ParserOptions.defaults(), Context.lookup, null);
+    defer env.deinit();
+
+    try std.testing.expectEqualStrings("hello external", env.get("WELCOME").?);
 }
 
 test "parseFile basic" {
